@@ -1,0 +1,4 @@
+import { GLOBAL_SCHOLARSHIPS } from './scholarships';
+
+export { GLOBAL_SCHOLARSHIPS };
+export const VERIFIED_OPPORTUNITIES = GLOBAL_SCHOLARSHIPS;

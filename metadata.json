@@ -1,0 +1,8 @@
+{
+  "name": "OpportunityLens AI",
+  "description": "Global scholarship discovery engine with deterministic eligibility verification, disaggregated funding calculator, and transparent data ingestion.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
