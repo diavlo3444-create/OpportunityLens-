@@ -73,7 +73,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
+          <h1 className="font-display text-2xl sm:text-[28px] font-semibold tracking-tight text-neutral-900 dark:text-white">
             Profile & Criteria Settings
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
@@ -99,10 +99,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </div>
 
       {/* Completion Meter Card */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="p-6 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="space-y-1.5 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-brass dark:text-brass-lt">
               Deterministic Verification Readiness
             </span>
           </div>
@@ -114,14 +114,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </p>
         </div>
 
-        <div className="w-24 h-24 rounded-full border-4 border-blue-600 flex items-center justify-center text-xl font-bold text-neutral-900 dark:text-white shrink-0 bg-blue-50/30 dark:bg-blue-950/20">
+        <div className="w-24 h-24 rounded-full border-4 border-brass dark:border-brass-lt flex items-center justify-center text-xl font-bold text-neutral-900 dark:text-white shrink-0 bg-brass-tint dark:bg-brass-lt/10">
           {completionPct}%
         </div>
       </div>
 
       {/* Main Profile Form */}
       <form onSubmit={handleSave} className="space-y-6">
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 sm:p-8 space-y-6">
           <h3 className="font-bold text-base text-neutral-900 dark:text-white pb-3 border-b border-black/[0.04] dark:border-white/[0.04]">
             Academic Identity & Degree Level
           </h3>
@@ -135,7 +135,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
               />
             </div>
 
@@ -148,7 +148,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 onChange={(e: any) =>
                   setFormData({ ...formData, academicLevel: e.target.value as AcademicLevel })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
               >
                 {ACADEMIC_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>
@@ -173,7 +173,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     age: e.target.value ? parseInt(e.target.value, 10) : null,
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
               />
             </div>
 
@@ -193,7 +193,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     gpa: e.target.value ? parseFloat(e.target.value) : null,
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
               />
             </div>
 
@@ -206,7 +206,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 value={formData.fieldOfStudy}
                 onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
                 placeholder="e.g. Public Policy, Computer Science, Renewable Energy"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
               />
             </div>
           </div>
@@ -283,7 +283,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     hasFinancialNeed: e.target.checked ? true : null,
                   })
                 }
-                className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 rounded text-brass focus:ring-brass"
               />
               <span>
                 I qualify for socioeconomic financial need (enables priority filtering for need-based full awards)
@@ -296,7 +296,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <div className="flex items-center gap-2">
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Save size={14} />
                 <span>Save Profile Changes</span>
@@ -333,9 +333,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </form>
 
       {/* Privacy Notice */}
-      <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-black/[0.04] dark:border-white/[0.06] space-y-2 text-xs text-neutral-600 dark:text-neutral-400">
+      <div className="p-6 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-black/[0.04] dark:border-white/[0.06] space-y-2 text-xs text-neutral-600 dark:text-neutral-400">
         <div className="flex items-center gap-2 text-neutral-900 dark:text-white font-bold">
-          <Lock size={15} className="text-blue-600" />
+          <Lock size={15} className="text-brass dark:text-brass-lt" />
           <span>Local Storage & Zero Telemetry Assurance</span>
         </div>
         <p className="leading-relaxed">

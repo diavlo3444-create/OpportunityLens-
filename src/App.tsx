@@ -173,7 +173,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBFD] dark:bg-black text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col lg:flex-row antialiased selection:bg-blue-500/20">
+    <div className="min-h-screen bg-[#FAFAF9] dark:bg-[#0A0A09] text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col lg:flex-row antialiased selection:bg-brass/20">
       {/* Navigation (Persistent Desktop Sidebar + Responsive Mobile Bar) */}
       <Navigation
         activeTab={activeTab}

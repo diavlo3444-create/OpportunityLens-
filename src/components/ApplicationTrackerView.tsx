@@ -30,9 +30,9 @@ interface ApplicationTrackerViewProps {
 
 const STATUS_COLUMNS: { id: ApplicationStatus; label: string; color: string }[] = [
   { id: 'saved', label: 'Saved', color: 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300' },
-  { id: 'researching', label: 'Researching', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300' },
+  { id: 'researching', label: 'Researching', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300' },
   { id: 'preparing', label: 'Preparing', color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' },
-  { id: 'submitted', label: 'Submitted', color: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300' },
+  { id: 'submitted', label: 'Submitted', color: 'bg-ink text-paper dark:bg-paper dark:text-ink' },
   { id: 'accepted', label: 'Accepted', color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },
   { id: 'rejected', label: 'Decided', color: 'bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400' },
 ];
@@ -117,14 +117,14 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20">
               Pipeline Management
             </span>
             <span className="text-xs text-neutral-500 dark:text-neutral-400">
               Sorted by Deadline Urgency
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-1">
+          <h1 className="font-display text-2xl sm:text-[28px] font-semibold tracking-tight text-neutral-900 dark:text-white mt-1">
             Application Tracker
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
@@ -160,7 +160,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
       </div>
 
       {trackerItems.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.06] space-y-3">
+        <div className="p-12 text-center rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.06] space-y-3">
           <KanbanSquare size={32} className="text-neutral-400 mx-auto" />
           <h3 className="font-semibold text-base text-neutral-900 dark:text-white">
             No tracked applications yet
@@ -178,7 +178,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
             return (
               <div
                 key={col.id}
-                className="rounded-3xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-black/[0.05] dark:border-white/[0.06] p-4 flex flex-col justify-between min-h-[360px]"
+                className="rounded-xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-black/[0.05] dark:border-white/[0.06] p-4 flex flex-col justify-between min-h-[360px]"
               >
                 <div>
                   {/* Column Header */}
@@ -205,8 +205,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
 
                       return (
                         <div
-                          key={item.id}
-                          className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3 hover:border-blue-500/40 transition"
+                          key={item.id}                              className="p-4 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3 hover:border-brass/40 dark:hover:border-brass-lt/30 transition"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
@@ -215,7 +214,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
                               </span>
                               <h4
                                 onClick={() => setSelectedItemForEdit(item.id)}
-                                className="font-bold text-sm text-neutral-900 dark:text-white hover:text-blue-600 transition cursor-pointer"
+                                className="font-display font-semibold text-sm text-neutral-900 dark:text-white hover:text-brass dark:hover:text-brass-lt transition cursor-pointer"
                               >
                                 {opp.title}
                               </h4>
@@ -246,7 +245,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
                             </div>
                             <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-blue-600 rounded-full"
+                                className="h-full bg-brass dark:bg-brass-lt rounded-full"
                                 style={{ width: `${progressPct}%` }}
                               />
                             </div>
@@ -268,7 +267,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
 
                             <button
                               onClick={() => onOpenReport(opp.id)}
-                              className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                              className="text-[11px] font-medium text-brass dark:text-brass-lt hover:underline"
                             >
                               Evidence Report
                             </button>
@@ -284,7 +283,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
         </div>
       ) : (
         /* TIMELINE LIST VIEW */
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm divide-y divide-black/[0.04] dark:divide-white/[0.04]">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs divide-y divide-black/[0.04] dark:divide-white/[0.04]">
           {sortedItems.map((item) => {
             const opp = getOpp(item.opportunityId);
             if (!opp) return null;
@@ -302,13 +301,13 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
                     <span className="text-[11px] font-semibold text-neutral-400 uppercase">
                       {opp.organizer}
                     </span>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt">
                       {opp.category}
                     </span>
                   </div>
                   <h3
                     onClick={() => setSelectedItemForEdit(item.id)}
-                    className="font-bold text-base text-neutral-900 dark:text-white hover:text-blue-600 transition cursor-pointer"
+                    className="font-display font-semibold text-base text-neutral-900 dark:text-white hover:text-brass dark:hover:text-brass-lt transition cursor-pointer"
                   >
                     {opp.title}
                   </h3>
@@ -354,7 +353,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
 
       {/* Detailed Application Modal / Drawer when an item is clicked */}
       {activeItem && activeOpp && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-6">
+        <div className="p-6 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
             <div>
               <span className="text-xs font-semibold text-neutral-400 uppercase">
@@ -377,7 +376,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
               </a>
               <button
                 onClick={() => onOpenReport(activeOpp.id)}
-                className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold"
+                className="px-3 py-1.5 rounded-lg bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink text-white text-xs font-semibold"
               >
                 Evidence Report
               </button>
@@ -400,7 +399,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
                     type="checkbox"
                     checked={chk.completed}
                     onChange={() => handleToggleChecklist(activeItem, chk.id)}
-                    className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                    className="rounded text-brass focus:ring-brass w-4 h-4"
                   />
                   <span className={chk.completed ? 'line-through text-neutral-400' : 'font-medium'}>
                     {chk.label}
@@ -442,7 +441,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
               value={activeItem.notes}
               onChange={(e) => handleUpdateNotes(activeItem, e.target.value)}
               placeholder="Record essay themes, recommenders contacted, or specific questions..."
-              className="w-full p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
             />
           </div>
         </div>

@@ -142,6 +142,7 @@ export async function getAdvisorHealth(): Promise<{
   hasApiKey: boolean;
   model: string;
   isAvailable: boolean;
+  setupHint?: string;
 }> {
   try {
     const res = await fetch('/api/advisor/status', {
@@ -156,6 +157,7 @@ export async function getAdvisorHealth(): Promise<{
       hasApiKey: Boolean(data.hasApiKey),
       model: data.model || 'gemini-2.5-flash',
       isAvailable: Boolean(data.hasApiKey),
+      setupHint: typeof data.setupHint === 'string' ? data.setupHint : undefined,
     };
   } catch {
     return { ok: false, hasApiKey: false, model: 'gemini-2.5-flash', isAvailable: false };

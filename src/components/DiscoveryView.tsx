@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Search,
   Filter,
@@ -25,8 +25,10 @@ import {
   HelpCircle,
   SlidersHorizontal,
 } from 'lucide-react';
-import { Scholarship, StudentProfile, AcademicLevel, EligibilityStatus } from '../types';
+import { Scholarship, StudentProfile, EligibilityStatus } from '../types';
 import { evaluateStudentEligibility } from '../utils/eligibilityEngine';
+import { fetchScholarships, postBatchIngest, ScholarshipQueryResponse } from '../utils/apiClient';
+import { GLOBAL_SCHOLARSHIPS } from '../data/scholarships';
 
 interface DiscoveryViewProps {
   scholarships: Scholarship[];
@@ -65,14 +67,22 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
   // Selected scholarship for detailed modal
   const [detailModalScholarship, setDetailModalScholarship] = useState<Scholarship | null>(null);
 
-  // Pre-calculate deterministic eligibility audits for all records
+  // Server-driven result set (single source of truth for results, totals, and pagination)
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [results, setResults] = useState<ScholarshipQueryResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
+  const requestIdRef = useRef(0);
+
+  // Deterministic eligibility audits for the records returned by the current query
   const scholarshipEvaluations = useMemo(() => {
     const map = new Map<string, ReturnType<typeof evaluateStudentEligibility>>();
-    for (const sch of scholarships) {
+    for (const sch of results?.results ?? []) {
       map.set(sch.id, evaluateStudentEligibility(studentProfile, sch));
     }
     return map;
-  }, [scholarships, studentProfile]);
+  }, [results, studentProfile]);
 
   // Extract unique destinations with counts
   const destinationOptions = useMemo(() => {
@@ -87,162 +97,131 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }, [scholarships]);
 
-  // Region classification helper
-  const matchesRegion = (sch: Scholarship, region: string): boolean => {
-    if (region === 'all') return true;
-    const dests = sch.destinationCountries.join(' ').toLowerCase();
-    if (region === 'europe') {
-      return (
-        dests.includes('united kingdom') ||
-        dests.includes('germany') ||
-        dests.includes('france') ||
-        dests.includes('switzerland') ||
-        dests.includes('netherlands') ||
-        dests.includes('sweden') ||
-        dests.includes('italy') ||
-        dests.includes('ireland') ||
-        dests.includes('hungary') ||
-        dests.includes('finland') ||
-        dests.includes('norway') ||
-        dests.includes('belgium') ||
-        dests.includes('spain')
-      );
-    }
-    if (region === 'americas') {
-      return dests.includes('united states') || dests.includes('canada') || dests.includes('mexico') || dests.includes('brazil') || dests.includes('chile');
-    }
-    if (region === 'asia-pacific') {
-      return (
-        dests.includes('japan') ||
-        dests.includes('south korea') ||
-        dests.includes('china') ||
-        dests.includes('singapore') ||
-        dests.includes('taiwan') ||
-        dests.includes('hong kong') ||
-        dests.includes('australia') ||
-        dests.includes('new zealand')
-      );
-    }
-    if (region === 'africa-middle-east') {
-      return (
-        dests.includes('south africa') ||
-        dests.includes('turkey') ||
-        dests.includes('saudi arabia') ||
-        dests.includes('egypt') ||
-        dests.includes('ghana') ||
-        dests.includes('nigeria') ||
-        dests.includes('kenya') ||
-        dests.includes('morocco')
-      );
-    }
-    if (region === 'global') {
-      return dests.includes('global') || dests.includes('international') || sch.providerType === 'Multilateral Organization';
-    }
-    return true;
-  };
+  // Debounce free-text search before hitting the API
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  // Filter and sort
-  const filteredScholarships = useMemo(() => {
-    return scholarships
-      .filter((sch) => {
-        const evalResult = scholarshipEvaluations.get(sch.id);
+  // Bootstrap sync (runs once on mount): push locally stored ingested records to the server index so
+  // the server-driven Discovery list and the local-state views (eligibility, tracker) stay in
+  // agreement after a server restart. Server-side dedup by id/URL makes this idempotent.
+  useEffect(() => {
+    const staticIds = new Set(GLOBAL_SCHOLARSHIPS.map((s) => s.id));
+    const localOnlyRecords = scholarships.filter((s) => !staticIds.has(s.id));
+    if (localOnlyRecords.length === 0) return;
 
-        // Search text
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchTitle = sch.title.toLowerCase().includes(q);
-          const matchOrganizer = (sch.provider || sch.organizer || '').toLowerCase().includes(q);
-          const matchSummary = (sch.summary || '').toLowerCase().includes(q);
-          const matchTags = (sch.tags || []).some((t) => t.toLowerCase().includes(q));
-          const matchDest = sch.destinationCountries.some((d) => d.toLowerCase().includes(q));
-          const matchSubj = (sch.subjectRestrictions || sch.eligibleSubjects || []).some((s) => s.toLowerCase().includes(q));
-          if (!matchTitle && !matchOrganizer && !matchSummary && !matchTags && !matchDest && !matchSubj) {
-            return false;
-          }
+    let cancelled = false;
+    postBatchIngest('Local Index Bootstrap Sync', localOnlyRecords)
+      .then((res) => {
+        if (!cancelled && res.success) {
+          setRetryToken((t) => t + 1); // refetch so results include the synced records
         }
-
-        // Region quick filter
-        if (!matchesRegion(sch, selectedRegion)) {
-          return false;
-        }
-
-        // Destination country filter
-        if (selectedDestination !== 'all') {
-          if (!sch.destinationCountries.includes(selectedDestination)) {
-            return false;
-          }
-        }
-
-        // Academic level filter
-        if (selectedLevel !== 'all') {
-          if (!sch.academicLevels.includes(selectedLevel as AcademicLevel)) {
-            return false;
-          }
-        }
-
-        // Funding type filter
-        if (selectedFundingType !== 'all') {
-          if (selectedFundingType === '100% Fully Funded') {
-            if (!sch.funding.isFullyFunded && sch.tuitionCoverage !== '100% Full Tuition') return false;
-          } else if (selectedFundingType === 'Tuition Waiver') {
-            if (sch.tuitionCoverage !== 'Tuition Waiver' && sch.tuitionCoverage !== '100% Full Tuition') return false;
-          } else if (selectedFundingType === 'Partial') {
-            if (sch.funding.isFullyFunded) return false;
-          }
-        }
-
-        // Eligibility outcome filter
-        if (selectedEligibility !== 'all') {
-          if (evalResult?.status !== selectedEligibility) {
-            return false;
-          }
-        }
-
-        // Verification status filter
-        if (selectedVerification !== 'all') {
-          if (sch.verificationStatus !== selectedVerification) {
-            return false;
-          }
-        }
-
-        return true;
       })
-      .sort((a, b) => {
-        if (sortBy === 'deadline') {
-          return (a.deadlineDate || '9999-12-31').localeCompare(b.deadlineDate || '9999-12-31');
+      .catch(() => {
+        // Non-fatal: the main query below reports connectivity problems on its own.
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Run once on mount with the initially loaded record set.
+  }, []);
+
+  // Profile-dependent controls (eligibility outcome filter, match-score sort) cannot be evaluated
+  // server-side because the server has no student profile. In those two modes we fetch the full
+  // matching set once (server max page size) and refine/paginate it locally.
+  const serverSort: 'deadline' | 'title' | 'newest' =
+    sortBy === 'name' ? 'title' : sortBy === 'matchScore' ? 'deadline' : sortBy;
+  const needsClientRefinement = selectedEligibility !== 'all' || sortBy === 'matchScore';
+
+  // Single data-fetch path: server-side search, filters, facets and pagination
+  useEffect(() => {
+    const requestId = ++requestIdRef.current;
+    setIsLoading(true);
+    setFetchError(null);
+
+    fetchScholarships({
+      search: debouncedSearch,
+      region: selectedRegion,
+      destinationCountry: selectedDestination,
+      academicLevel: selectedLevel,
+      fundingType: selectedFundingType,
+      verificationStatus: selectedVerification,
+      sortBy: serverSort,
+      page: needsClientRefinement ? 1 : currentPage,
+      pageSize: needsClientRefinement ? 100 : pageSize,
+    })
+      .then((res) => {
+        if (requestId !== requestIdRef.current) return;
+        setResults(res);
+        setIsLoading(false);
+        // Auto-correct if the requested page drifted past the last page (e.g. data changed)
+        if (!needsClientRefinement && res.total > 0 && res.page > res.totalPages) {
+          setCurrentPage(res.totalPages);
         }
-        if (sortBy === 'matchScore') {
-          const scoreA = scholarshipEvaluations.get(a.id)?.overallScore ?? 0;
-          const scoreB = scholarshipEvaluations.get(b.id)?.overallScore ?? 0;
-          return scoreB - scoreA;
-        }
-        if (sortBy === 'newest') {
-          return (b.createdAt || '').localeCompare(a.createdAt || '');
-        }
-        return a.title.localeCompare(b.title);
+      })
+      .catch((err: Error) => {
+        if (requestId !== requestIdRef.current) return;
+        setFetchError(err.message || 'Unable to reach the scholarship index.');
+        setIsLoading(false);
       });
   }, [
-    scholarships,
-    scholarshipEvaluations,
-    searchQuery,
+    debouncedSearch,
     selectedRegion,
     selectedDestination,
     selectedLevel,
     selectedFundingType,
-    selectedEligibility,
     selectedVerification,
-    sortBy,
+    serverSort,
+    currentPage,
+    pageSize,
+    needsClientRefinement,
+    retryToken,
   ]);
 
-  // Reset to page 1 whenever filters change
-  const totalItems = filteredScholarships.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
-  const validCurrentPage = Math.min(currentPage, totalPages);
+  const handleRetry = () => setRetryToken((t) => t + 1);
 
-  const paginatedScholarships = useMemo(() => {
-    const startIndex = (validCurrentPage - 1) * pageSize;
-    return filteredScholarships.slice(startIndex, startIndex + pageSize);
-  }, [filteredScholarships, validCurrentPage, pageSize]);
+  // Derive the displayed page: server pagination directly, or local refinement over the fetched set
+  const { paginatedScholarships, totalItems, totalPages, validCurrentPage } = useMemo(() => {
+    if (!results) {
+      return { paginatedScholarships: [] as Scholarship[], totalItems: 0, totalPages: 1, validCurrentPage: 1 };
+    }
+
+    if (!needsClientRefinement) {
+      return {
+        paginatedScholarships: results.results,
+        totalItems: results.total,
+        totalPages: results.totalPages,
+        validCurrentPage: Math.min(currentPage, results.totalPages),
+      };
+    }
+
+    let refined = results.results;
+    if (selectedEligibility !== 'all') {
+      refined = refined.filter((sch) => scholarshipEvaluations.get(sch.id)?.status === selectedEligibility);
+    }
+    if (sortBy === 'matchScore') {
+      refined = [...refined].sort(
+        (a, b) =>
+          (scholarshipEvaluations.get(b.id)?.overallScore ?? 0) -
+          (scholarshipEvaluations.get(a.id)?.overallScore ?? 0)
+      );
+    }
+
+    const refinedTotal = refined.length;
+    const refinedPages = Math.ceil(refinedTotal / pageSize) || 1;
+    const refinedPage = Math.min(currentPage, refinedPages);
+    const startIndex = (refinedPage - 1) * pageSize;
+    return {
+      paginatedScholarships: refined.slice(startIndex, startIndex + pageSize),
+      totalItems: refinedTotal,
+      totalPages: refinedPages,
+      validCurrentPage: refinedPage,
+    };
+  }, [results, scholarshipEvaluations, needsClientRefinement, selectedEligibility, sortBy, currentPage, pageSize]);
+
+  // Honest disclosure when profile-refinement modes hit the server page-size cap
+  const refinementTruncated = needsClientRefinement && results !== null && results.total > results.results.length;
 
   const handleResetFilters = () => {
     setSearchQuery('');
@@ -261,26 +240,26 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       case 'likely_eligible':
         return {
           label: 'Likely Eligible',
-          className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+          className: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-500/20',
           icon: CheckCircle2,
         };
       case 'potentially_eligible':
         return {
           label: 'Potentially Eligible',
-          className: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+          className: 'bg-brass-tint text-brass-strong dark:bg-brass-lt/15 dark:text-brass-lt border-brass/20 dark:border-brass-lt/20',
           icon: AlertCircle,
         };
       case 'ineligible':
         return {
           label: 'Unmet Criteria',
-          className: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
+          className: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border-red-200/60 dark:border-red-500/20',
           icon: AlertCircle,
         };
       case 'insufficient_info':
       default:
         return {
           label: 'Incomplete Profile Fit',
-          className: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
+          className: 'bg-black/[0.05] text-ink-soft dark:bg-white/[0.07] dark:text-neutral-400 border-black/[0.06] dark:border-white/[0.08]',
           icon: AlertCircle,
         };
     }
@@ -292,19 +271,18 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                Worldwide Scholarship Search Engine
-              </span>
-              <span className="text-xs text-neutral-500">
-                {scholarships.length} Indexed Real Opportunities
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-brass dark:text-brass-lt">
+              <Globe2 size={13} />
+              <span>Worldwide Scholarship Search Engine</span>
+              <span className="font-medium normal-case tracking-normal text-neutral-400 dark:text-neutral-500">
+                · {scholarships.length} indexed opportunities
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-1">
+            <h1 className="font-display text-2xl sm:text-[28px] font-semibold tracking-tight leading-tight text-ink dark:text-white mt-2">
               Global Scholarship Discovery
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1 max-w-2xl">
-              Query verified government scholarships, university excellence packages, and research grants across all continents with transparent evidence-backed requirements.
+            <p className="text-[13px] sm:text-sm text-ink-soft dark:text-neutral-400 mt-1.5 max-w-2xl leading-relaxed">
+              Query verified government scholarships, university excellence packages, and research grants across all continents — every requirement backed by its official source.
             </p>
           </div>
 
@@ -345,8 +323,8 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                 selectedRegion === reg.id
-                  ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-sm'
-                  : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800'
+                  ? 'bg-ink text-paper dark:bg-paper dark:text-ink shadow-xs'
+                  : 'bg-black/[0.05] dark:bg-white/[0.07] text-neutral-600 dark:text-neutral-400 hover:bg-black/[0.09] dark:hover:bg-white/[0.12] hover:text-ink dark:hover:text-white'
               }`}
             >
               {reg.label}
@@ -357,7 +335,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
         {/* Search & Sort Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-3 text-neutral-400" size={17} />
+            <Search className="absolute left-4 top-3.5 text-neutral-400 dark:text-neutral-500" size={17} />
             <input
               type="text"
               value={searchQuery}
@@ -365,8 +343,8 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search across title, host country, university, degree, or field (e.g. Oxford, DAAD, Master's, Economics, Germany)..."
-              className="w-full pl-10 pr-10 py-2.5 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              placeholder="Search title, country, university, degree, or field — e.g. Oxford, DAAD, Economics…"
+              className="w-full pl-11 pr-10 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.08] dark:border-white/[0.10] text-sm text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt focus:border-transparent shadow-xs"
             />
             {searchQuery && (
               <button
@@ -382,7 +360,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
             <select
               value={sortBy}
               onChange={(e: any) => setSortBy(e.target.value)}
-              className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.08] dark:border-white/[0.08] text-xs font-semibold text-neutral-700 dark:text-neutral-300 focus:outline-none cursor-pointer shadow-sm"
+              className="px-3.5 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.08] dark:border-white/[0.10] text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer shadow-xs"
             >
               <option value="deadline">Sort by Deadline (Nearest)</option>
               <option value="matchScore">Sort by Student Criteria Match</option>
@@ -393,11 +371,11 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
         </div>
 
         {/* Multi-Dimensional Filter Controls */}
-        <div className="p-4 rounded-3xl bg-neutral-50/80 dark:bg-neutral-900/60 border border-black/[0.06] dark:border-white/[0.06] space-y-3">
+        <div className="p-4 rounded-xl bg-white/70 dark:bg-neutral-900/50 border border-black/[0.06] dark:border-white/[0.07] space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-              <SlidersHorizontal size={14} className="text-blue-600" />
-              <span>Precise Query Filters</span>
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-ink dark:text-neutral-200">
+              <SlidersHorizontal size={13} className="text-brass dark:text-brass-lt" />
+              <span>Precise query filters</span>
             </div>
 
             {(selectedDestination !== 'all' ||
@@ -409,9 +387,9 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
               searchQuery !== '') && (
               <button
                 onClick={handleResetFilters}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium"
+                className="text-xs font-semibold text-brass dark:text-brass-lt hover:underline cursor-pointer"
               >
-                Reset All Filters
+                Reset all filters
               </button>
             )}
           </div>
@@ -519,7 +497,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
           {selectedDestination !== 'all' && (
             <span>
               {' '}
-              in <strong className="text-blue-600 dark:text-blue-400">{selectedDestination}</strong>
+              in <strong className="text-brass dark:text-brass-lt">{selectedDestination}</strong>
             </span>
           )}
         </div>
@@ -550,14 +528,78 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
         )}
       </div>
 
-      {/* Empty State */}
-      {totalItems === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+      {/* Profile-refinement truncation disclosure */}
+      {refinementTruncated && (
+        <div className="px-4 py-2.5 rounded-lg bg-brass-tint dark:bg-brass-lt/10 border border-brass/20 dark:border-brass-lt/20 text-xs text-brass-strong dark:text-brass-lt">
+          Profile filters are applied over the first {results?.results.length} of {results?.total} matching records
+          (server page limit). Narrow your search to cover the full index.
+        </div>
+      )}
+
+      {/* Refresh failure while stale results are still shown */}
+      {fetchError && results && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200/70 dark:border-red-500/25 text-xs text-red-700 dark:text-red-400">
+          <span>Could not refresh results: {fetchError}</span>
+          <button onClick={handleRetry} className="font-semibold underline cursor-pointer shrink-0">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Updating indicator while stale results are shown */}
+      {isLoading && results && !fetchError && (
+        <div className="text-xs text-neutral-500 dark:text-neutral-400 animate-pulse">Updating results…</div>
+      )}
+
+      {/* Fetch error with no data yet */}
+      {fetchError && !results ? (
+        <div className="p-12 text-center rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] space-y-4">
+          <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
+            <AlertCircle size={24} />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-display text-base font-semibold text-neutral-900 dark:text-white">
+              Unable to load scholarship results
+            </h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
+              {fetchError} Check your connection and retry the query.
+            </p>
+          </div>
+          <button
+            onClick={handleRetry}
+            className="px-4 py-2 rounded-lg bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+          >
+            Retry Query
+          </button>
+        </div>
+      ) : isLoading && !results ? (
+        /* Initial loading skeleton */
+        <div className="space-y-4">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 animate-pulse">
+            Querying the global scholarship index…
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] p-5 space-y-3 animate-pulse"
+              >
+                <div className="h-3 w-24 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+                <div className="h-4 w-3/4 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+                <div className="h-3 w-1/2 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+                <div className="h-20 w-full rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
+                <div className="h-3 w-2/3 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : totalItems === 0 ? (
+        <div className="p-12 text-center rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] space-y-4">
+          <div className="w-12 h-12 rounded-full bg-brass-tint dark:bg-brass-lt/10 text-brass dark:text-brass-lt flex items-center justify-center mx-auto">
             <Globe2 size={24} />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+            <h3 className="font-display text-base font-semibold text-neutral-900 dark:text-white">
               No matching scholarships found for this criteria
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
@@ -567,7 +609,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={handleResetFilters}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition cursor-pointer"
+              className="px-4 py-2 rounded-lg bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
             >
               Reset Filters
             </button>
@@ -575,7 +617,12 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
         </div>
       ) : (
         /* Opportunity Cards Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div
+          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 transition-opacity ${
+            isLoading ? 'opacity-60 pointer-events-none' : ''
+          }`}
+          aria-busy={isLoading}
+        >
           {paginatedScholarships.map((sch) => {
             const evalReport = scholarshipEvaluations.get(sch.id);
             const badge = getStatusBadge(evalReport?.status);
@@ -589,7 +636,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
             return (
               <div
                 key={sch.id}
-                className="group rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
+                className="group rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.09] hover:border-brass/40 dark:hover:border-brass-lt/30 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
               >
                 <div className="p-5 space-y-3.5">
                   {/* Top Header: Host Country, Verification & Bookmark */}
@@ -600,13 +647,19 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                         <span>{sch.destinationCountries.join(', ')}</span>
                       </span>
 
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                          sch.verificationStatus === 'Officially Verified'
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                            : 'bg-brass/10 text-brass-strong dark:text-brass-lt'
+                        }`}
+                      >
                         <ShieldCheck size={11} />
                         <span>{sch.verificationStatus}</span>
                       </span>
 
                       {sch.isDemonstration && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-black/[0.06] dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-400">
                           Demo Record
                         </span>
                       )}
@@ -614,9 +667,9 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
 
                     <button
                       onClick={() => onTrackScholarship(sch.id)}
-                      className={`p-1.5 rounded-xl transition cursor-pointer shrink-0 ${
+                      className={`p-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                         isTracked
-                          ? 'bg-blue-600 text-white shadow-sm'
+                          ? 'bg-ink text-paper dark:bg-paper dark:text-ink shadow-xs'
                           : 'text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                       }`}
                       title={isTracked ? 'Tracked in your applications' : 'Add to Application Tracker'}
@@ -629,7 +682,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                   <div>
                     <h3
                       onClick={() => setDetailModalScholarship(sch)}
-                      className="text-base font-bold text-neutral-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition cursor-pointer line-clamp-2"
+                      className="font-display text-base font-semibold leading-snug text-neutral-900 dark:text-white group-hover:text-brass dark:group-hover:text-brass-lt transition cursor-pointer line-clamp-2"
                     >
                       {sch.title}
                     </h3>
@@ -641,15 +694,15 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                   {/* Eligibility Match Fit Badge */}
                   <div className="flex items-center justify-between gap-2 pt-0.5">
                     <span
-                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-xl border flex items-center gap-1.5 ${badge.className}`}
+                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${badge.className}`}
                     >
                       <badge.icon size={13} />
                       <span>{badge.label}</span>
                     </span>
 
                     {evalReport && (
-                      <span className="text-[11px] font-mono font-semibold text-neutral-600 dark:text-neutral-400">
-                        {evalReport.overallScore}% Fit
+                      <span className="text-[11px] font-display font-semibold tabular-nums text-brass dark:text-brass-lt">
+                        {evalReport.overallScore}% fit
                       </span>
                     )}
                   </div>
@@ -669,13 +722,13 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                         {lvl}
                       </span>
                     ))}
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400">
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt">
                       {sch.format}
                     </span>
                   </div>
 
                   {/* Financial Coverage Snapshot Box */}
-                  <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-950/60 border border-black/[0.04] dark:border-white/[0.04] space-y-2">
+                  <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-950/60 border border-black/[0.04] dark:border-white/[0.04] space-y-2">
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-neutral-500 font-medium">Published Award:</span>
                       <span className="font-semibold text-neutral-900 dark:text-neutral-100 truncate max-w-[170px]" title={sch.awardAmountAndCurrency || ''}>
@@ -712,9 +765,13 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                       <span>Deadline: <strong className="text-neutral-800 dark:text-neutral-200">{sch.deadline}</strong></span>
                     </div>
 
-                    {diffDays > 0 ? (
-                      <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md">
+                    {diffDays > 14 ? (
+                      <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 bg-black/[0.05] dark:bg-white/[0.07] px-2 py-0.5 rounded-md">
                         {diffDays} days left
+                      </span>
+                    ) : diffDays > 0 ? (
+                      <span className="text-[10px] font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/10 px-2 py-0.5 rounded-md">
+                        {diffDays === 1 ? 'Closes tomorrow' : `${diffDays} days left`}
                       </span>
                     ) : (
                       <span className="text-[10px] text-neutral-400">Annual Cycle</span>
@@ -727,7 +784,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => onOpenReport(sch.id)}
-                      className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1 cursor-pointer"
                     >
                       <FileCheck2 size={12} />
                       <span>Audit Fit</span>
@@ -735,7 +792,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
 
                     <button
                       onClick={() => onOpenCalculator(sch.id)}
-                      className="px-2 py-1.5 rounded-xl bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-black/[0.06] dark:border-white/[0.08] text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                      className="px-2 py-1.5 rounded-lg bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-black/[0.07] dark:border-white/[0.09] text-xs font-medium transition flex items-center gap-1 cursor-pointer"
                     >
                       <Receipt size={12} />
                       <span>Calculator</span>
@@ -744,7 +801,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                     {onOpenAdvisor && (
                       <button
                         onClick={() => onOpenAdvisor(sch.id)}
-                        className="px-2 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                        className="px-2 py-1.5 rounded-lg bg-brass-tint dark:bg-brass-lt/10 hover:bg-brass/10 dark:hover:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20 text-xs font-medium transition flex items-center gap-1 cursor-pointer"
                         title="Consult AI Scholarship Advisor"
                       >
                         <Sparkles size={12} />
@@ -801,9 +858,9 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                 <button
                   key={pNum}
                   onClick={() => setCurrentPage(pNum)}
-                  className={`w-7 h-7 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  className={`w-7 h-7 rounded-lg text-xs font-semibold transition cursor-pointer ${
                     validCurrentPage === pNum
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-ink text-paper dark:bg-paper dark:text-ink'
                       : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
                   }`}
                 >
@@ -826,28 +883,35 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       {/* DETAILED SCHOLARSHIP INSPECTION MODAL */}
       {detailModalScholarship && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-3xl border border-black/[0.08] dark:border-white/[0.08] shadow-2xl overflow-y-auto p-6 sm:p-8 space-y-6">
+          <div className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl border border-black/[0.08] dark:border-white/[0.10] shadow-2xl overflow-y-auto p-6 sm:p-8 space-y-6">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.06] pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20">
                     {detailModalScholarship.destinationCountries.join(', ')}
                   </span>
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <span
+                    className={`text-xs font-semibold ${
+                      detailModalScholarship.verificationStatus === 'Officially Verified'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-brass dark:text-brass-lt'
+                    }`}
+                  >
                     {detailModalScholarship.verificationStatus}
                   </span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white mt-1">
+                <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white mt-2">
                   {detailModalScholarship.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-neutral-500 mt-0.5">
+                <p className="text-xs sm:text-sm text-neutral-500 mt-1">
                   {detailModalScholarship.provider} • {detailModalScholarship.providerType}
                 </p>
               </div>
 
               <button
                 onClick={() => setDetailModalScholarship(null)}
+                aria-label="Close details"
                 className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 transition cursor-pointer shrink-0"
               >
                 <X size={18} />
@@ -855,9 +919,9 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
             </div>
 
             {/* Extracted Evidence / Official Decree Quote */}
-            <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950 border border-black/[0.04] dark:border-white/[0.04] space-y-1.5">
-              <span className="text-[11px] uppercase font-bold text-neutral-400 tracking-wider">
-                Official Regulatory Decree / Citation Excerpt:
+            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-950 border-l-2 border-brass/50 dark:border-brass-lt/50 border-y border-r border-black/[0.04] dark:border-white/[0.04] space-y-1.5">
+              <span className="text-[11px] uppercase font-bold text-brass dark:text-brass-lt tracking-[0.12em]">
+                Official regulatory citation
               </span>
               <p className="text-xs font-serif italic text-neutral-700 dark:text-neutral-300 leading-relaxed">
                 "{detailModalScholarship.extractedEvidence}"
@@ -908,7 +972,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
               <div className="space-y-1.5">
                 {detailModalScholarship.academicRequirements.map((req, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-xs text-neutral-700 dark:text-neutral-300">
-                    <CheckCircle2 size={14} className="text-blue-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 size={14} className="text-brass dark:text-brass-lt shrink-0 mt-0.5" />
                     <span>{req}</span>
                   </div>
                 ))}
@@ -941,7 +1005,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                     setDetailModalScholarship(null);
                     onOpenReport(id);
                   }}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <FileCheck2 size={14} />
                   <span>Run Eligibility Evidence Audit</span>
@@ -966,7 +1030,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                       setDetailModalScholarship(null);
                       onOpenAdvisor(id);
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    className="px-3.5 py-2 rounded-lg bg-brass-tint dark:bg-brass-lt/10 hover:bg-brass/10 dark:hover:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
                   >
                     <Sparkles size={14} />
                     <span>Consult Advisor</span>

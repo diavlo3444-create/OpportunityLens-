@@ -2,6 +2,7 @@ import { Scholarship, SourceRegistryEntry, IngestionLog } from '../types';
 
 export interface ScholarshipQueryParams {
   search?: string;
+  region?: string;
   destinationCountry?: string;
   nationality?: string;
   academicLevel?: string;
@@ -41,10 +42,15 @@ export interface TelemetryResponse {
   methodologyStatement: string;
 }
 
-export async function fetchScholarships(params: ScholarshipQueryParams = {}): Promise<ScholarshipQueryResponse | null> {
+/**
+ * Query the backend scholarship index (server-side search, filters, facets, pagination).
+ * Throws on network/HTTP failure so callers can surface an explicit error state.
+ */
+export async function fetchScholarships(params: ScholarshipQueryParams = {}): Promise<ScholarshipQueryResponse> {
   try {
     const query = new URLSearchParams();
     if (params.search) query.set('search', params.search);
+    if (params.region && params.region !== 'all') query.set('region', params.region);
     if (params.destinationCountry && params.destinationCountry !== 'all') query.set('destinationCountry', params.destinationCountry);
     if (params.nationality && params.nationality !== 'all') query.set('nationality', params.nationality);
     if (params.academicLevel && params.academicLevel !== 'all') query.set('academicLevel', params.academicLevel);
@@ -56,13 +62,13 @@ export async function fetchScholarships(params: ScholarshipQueryParams = {}): Pr
     if (params.sortBy) query.set('sortBy', params.sortBy);
 
     const res = await fetch(`/api/scholarships?${query.toString()}`);
-    if (res.ok) {
-      return await res.json();
+    if (!res.ok) {
+      throw new Error(`Scholarship query failed with status ${res.status}`);
     }
-  } catch (err) {
-    console.warn('Backend /api/scholarships fetch failed, falling back to local client processing:', err);
+    return await res.json();
+  } catch (err: any) {
+    throw err instanceof Error ? err : new Error('Scholarship query failed');
   }
-  return null;
 }
 
 export async function fetchTelemetry(): Promise<TelemetryResponse | null> {

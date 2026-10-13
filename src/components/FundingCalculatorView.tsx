@@ -60,7 +60,7 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
               Cost Disaggregation Model
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-1">
+          <h1 className="font-display text-2xl sm:text-[28px] font-semibold tracking-tight text-neutral-900 dark:text-white mt-1">
             Student Funding Calculator
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
@@ -93,7 +93,7 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
       {/* KPI Highlight Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Cost */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-1">
+        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
             Total Program Cost
           </span>
@@ -106,7 +106,7 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
         </div>
 
         {/* Confirmed Funding */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-1">
+        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
             Confirmed Funding
           </span>
@@ -119,7 +119,7 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
         </div>
 
         {/* Remaining Uncovered */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-1">
+        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400">
             Out-of-Pocket Expense
           </span>
@@ -132,16 +132,16 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
         </div>
 
         {/* Percentage Covered */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brass dark:text-brass-lt">
             Coverage Rate
           </span>
-          <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
+          <div className="text-2xl sm:text-3xl font-display font-semibold text-brass dark:text-brass-lt">
             {fundingResult.coveragePercentage}%
           </div>
           <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden mt-1">
             <div
-              className="h-full bg-blue-600 rounded-full"
+              className="h-full bg-brass dark:bg-brass-lt rounded-full"
               style={{ width: `${fundingResult.coveragePercentage}%` }}
             />
           </div>
@@ -150,7 +150,7 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
 
       {/* Fully Funded Verification Banner */}
       <div
-        className={`p-5 rounded-3xl border ${
+        className={`p-5 rounded-xl border ${
           fundingResult.isTrulyFullyFunded
             ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-900 dark:text-emerald-200'
             : 'bg-neutral-100 dark:bg-neutral-900 border-black/[0.06] dark:border-white/[0.08] text-neutral-800 dark:text-neutral-300'
@@ -182,7 +182,7 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
       </div>
 
       {/* Itemized Financial Breakdown Table */}
-      <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm overflow-hidden">
+      <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs overflow-hidden">
         <div className="p-6 border-b border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between">
           <div>
             <h3 className="font-bold text-base text-neutral-900 dark:text-white">
@@ -211,7 +211,7 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
               </span>
               <button
                 onClick={handleResetOverrides}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                className="text-xs text-brass dark:text-brass-lt hover:underline flex items-center gap-1"
               >
                 <RotateCcw size={12} />
                 <span>Reset to defaults</span>
