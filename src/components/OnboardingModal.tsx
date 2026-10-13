@@ -101,12 +101,12 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-3xl border border-black/[0.08] dark:border-white/[0.08] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Top Header */}
         <div className="p-6 border-b border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20">
                 Step {step} of {totalSteps}
               </span>
               <span className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -132,7 +132,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {/* Progress bar */}
         <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800">
           <div
-            className="h-full bg-blue-600 transition-all duration-300"
+            className="h-full bg-brass dark:bg-brass-lt transition-all duration-300"
             style={{ width: `${(step / totalSteps) * 100}%` }}
           />
         </div>
@@ -142,8 +142,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* STEP 1: Academic Standing & Level */}
           {step === 1 && (
             <div className="space-y-5">
-              <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-950/50 border border-black/[0.04] dark:border-white/[0.04] text-xs text-neutral-600 dark:text-neutral-400 flex items-start gap-2.5">
-                <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
+              <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-950/50 border border-black/[0.04] dark:border-white/[0.04] text-xs text-neutral-600 dark:text-neutral-400 flex items-start gap-2.5">                  <Info size={16} className="text-brass dark:text-brass-lt shrink-0 mt-0.5" />
                 <span>
                   Global scholarships strictly segregate by study level (e.g. Master’s fellowship vs Undergraduate grant). Setting your exact level eliminates irrelevant awards.
                 </span>
@@ -158,7 +157,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Alex Rivera"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                 />
               </div>
 
@@ -172,7 +171,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     onChange={(e: any) =>
                       setFormData({ ...formData, academicLevel: e.target.value as AcademicLevel })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                   >
                     {ACADEMIC_LEVELS.map((lvl) => (
                       <option key={lvl} value={lvl}>
@@ -198,7 +197,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       })
                     }
                     placeholder="e.g. 22"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                   />
                 </div>
               </div>
@@ -221,7 +220,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       })
                     }
                     placeholder="e.g. 3.85"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                   />
                 </div>
 
@@ -234,7 +233,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     value={formData.fieldOfStudy}
                     onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
                     placeholder="e.g. Public Policy, Computer Science, Economics"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                   />
                 </div>
               </div>
@@ -244,10 +243,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* STEP 2: Citizenship & Legal Eligibility */}
           {step === 2 && (
             <div className="space-y-5">
-              <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/40 dark:border-blue-900/40 text-xs text-neutral-700 dark:text-neutral-300 flex items-start gap-2.5">
-                <Shield size={16} className="text-blue-600 shrink-0 mt-0.5" />
+              <div className="p-3.5 rounded-xl bg-brass-tint dark:bg-brass-lt/10 border border-brass/20 dark:border-brass-lt/20 text-xs text-neutral-700 dark:text-neutral-300 flex items-start gap-2.5">
+                <Shield size={16} className="text-brass dark:text-brass-lt shrink-0 mt-0.5" />
                 <div>
-                  <strong className="font-semibold text-blue-900 dark:text-blue-300">Authoritative Bilateral Rules:</strong>{' '}
+                  <strong className="font-semibold text-brass-strong dark:text-brass-lt">Authoritative Bilateral Rules:</strong>{' '}
                   Government scholarships (e.g. Chevening, Fulbright, DAAD) operate under bilateral treaties and only accept citizens of specific partner countries.
                   All entries are stored strictly in your browser’s localStorage.
                 </div>
@@ -264,7 +263,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     setFormData({ ...formData, countryOfResidence: e.target.value })
                   }
                   placeholder="e.g. Nigeria, India, United States, Kenya, Brazil"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                 />
               </div>
 
@@ -285,7 +284,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     })
                   }
                   placeholder="e.g. Nigeria, United Kingdom, Mexico"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                 />
                 <p className="text-[11px] text-neutral-500 mt-1">
                   Separate multiple citizenships with commas.
@@ -303,7 +302,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                         hasFinancialNeed: e.target.checked ? true : null,
                       })
                     }
-                    className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
+                    className="mt-0.5 rounded text-brass focus:ring-brass"
                   />
                   <span>
                     I require need-based funding support (enables filtering for low-income priority awards).
@@ -341,7 +340,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                           },
                         })
                       }
-                      className="rounded text-blue-600"
+                      className="rounded text-brass"
                     />
                     <span>100% Tuition Fees</span>
                   </label>
@@ -359,7 +358,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                           },
                         })
                       }
-                      className="rounded text-blue-600"
+                      className="rounded text-brass"
                     />
                     <span>Housing / Dormitory</span>
                   </label>
@@ -377,7 +376,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                           },
                         })
                       }
-                      className="rounded text-blue-600"
+                      className="rounded text-brass"
                     />
                     <span>Living Allowance / Stipend</span>
                   </label>
@@ -395,7 +394,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                           },
                         })
                       }
-                      className="rounded text-blue-600"
+                      className="rounded text-brass"
                     />
                     <span>Return International Airfare</span>
                   </label>
@@ -422,7 +421,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                         },
                       })
                     }
-                    className="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
                   />
                 </div>
               </div>
@@ -446,7 +445,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                         onClick={() => toggleDestination(dest)}
                         className={`text-xs px-3 py-1.5 rounded-full font-medium transition cursor-pointer ${
                           isSelected
-                            ? 'bg-blue-600 text-white shadow-sm'
+                            ? 'bg-ink text-paper dark:bg-paper dark:text-ink shadow-sm'
                             : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                         }`}
                       >
@@ -503,7 +502,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           <button
             type="button"
             onClick={handleNext}
-            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
           >
             <span>{step === totalSteps ? 'Save Profile' : 'Continue'}</span>
             <ArrowRight size={14} />

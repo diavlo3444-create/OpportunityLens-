@@ -52,14 +52,14 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] px-0 rounded-full text-brass dark:text-brass-lt">
               100% Deterministic Engine
             </span>
             <span className="text-xs text-neutral-500 dark:text-neutral-400">
               Zero Black-Box LLM Inferences
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-1">
+          <h1 className="font-display text-2xl sm:text-[28px] font-semibold tracking-tight text-neutral-900 dark:text-white mt-1">
             Eligibility Evidence Engine
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
@@ -87,7 +87,7 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
       </div>
 
       {/* Main Executive Outcome Card */}
-      <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.03)] overflow-hidden">
+      <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs overflow-hidden">
         {/* Outcome Header */}
         <div className="p-6 sm:p-8 border-b border-black/[0.05] dark:border-white/[0.06] bg-neutral-50/50 dark:bg-neutral-950/40">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -105,7 +105,7 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
                   href={activeSch.officialUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 font-semibold"
+                  className="text-brass dark:text-brass-lt hover:underline inline-flex items-center gap-1 font-semibold"
                 >
                   <span>Official Program Source</span>
                   <ExternalLink size={12} />
@@ -134,7 +134,7 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
               {onOpenAdvisor && (
                 <button
                   onClick={() => onOpenAdvisor(activeSch.id)}
-                  className="px-3.5 py-2 rounded-2xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-3.5 py-2 rounded-xl bg-brass-tint dark:bg-brass-lt/10 hover:bg-brass/10 dark:hover:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                   title="Consult AI Scholarship Advisor"
                 >
                   <Sparkles size={14} />
@@ -146,7 +146,7 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
                 onClick={() => onTrackScholarship(activeSch.id)}
                 className={`p-2.5 rounded-2xl border transition cursor-pointer ${
                   isTracked
-                    ? 'bg-blue-600 text-white border-blue-600'
+                    ? 'bg-ink text-paper dark:bg-paper dark:text-ink border-transparent dark:border-paper'
                     : 'border-black/[0.08] dark:border-white/[0.08] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                 }`}
                 title={isTracked ? 'Tracked in Applications' : 'Add to Application Tracker'}
@@ -169,7 +169,7 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                <Scale size={15} className="text-blue-600" />
+                <Scale size={15} className="text-brass dark:text-brass-lt" />
                 <span>Deterministic Criteria Match Score: {report.overallScore}/100</span>
               </div>
               <p className="text-xs text-neutral-500">
@@ -322,7 +322,7 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
                         href={item.officialSourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                        className="text-[11px] font-semibold text-brass dark:text-brass-lt hover:underline inline-flex items-center gap-1"
                       >
                         <span>Official Source Link</span>
                         <ExternalLink size={11} />
@@ -353,8 +353,7 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
                 <div
                   key={idx}
                   className="p-3 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04] flex items-center gap-2"
-                >
-                  <CheckCircle2 size={14} className="text-blue-600 shrink-0" />
+                >                        <CheckCircle2 size={14} className="text-brass dark:text-brass-lt shrink-0" />
                   <span className="text-neutral-800 dark:text-neutral-200">{doc}</span>
                 </div>
               ))}

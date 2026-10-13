@@ -354,7 +354,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
               {sources.length} Official Registries Active
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-1">
+          <h1 className="font-display text-2xl sm:text-[28px] font-semibold tracking-tight text-neutral-900 dark:text-white mt-1">
             Data Ingestion & Source Crawler
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1 max-w-2xl">
@@ -382,8 +382,8 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
       </div>
 
       {/* Honest Scope Disclosure Banner */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-neutral-100 dark:bg-neutral-900/80 border border-black/[0.06] dark:border-white/[0.08] text-xs text-neutral-600 dark:text-neutral-400 flex items-start gap-3">
-        <Info size={17} className="text-blue-600 shrink-0 mt-0.5" />
+      <div className="p-4 sm:p-5 rounded-xl bg-neutral-100 dark:bg-neutral-900/80 border border-black/[0.06] dark:border-white/[0.08] text-xs text-neutral-600 dark:text-neutral-400 flex items-start gap-3">
+        <Info size={17} className="text-brass dark:text-brass-lt shrink-0 mt-0.5" />
         <div className="leading-relaxed">
           <strong className="font-semibold text-neutral-900 dark:text-white">Coverage Methodology & Transparency:</strong>{' '}
           OpportunityLens AI indexes scholarships directly from official statutory decree portals, bilateral educational agreements, and accredited higher education portals across 38+ registered national bodies. We do not make false claims of capturing every local bursary; coverage expands continually. Every country filter queries genuine opportunities or registered discovery sources.
@@ -464,7 +464,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
         <div className="space-y-6">
           {/* Active Terminal View if crawler has run */}
           {crawlerTerminalLogs.length > 0 && (
-            <div className="rounded-3xl bg-neutral-950 border border-neutral-800 p-5 font-mono text-xs text-neutral-300 space-y-2 shadow-xl">
+            <div className="rounded-xl bg-neutral-950 border border-neutral-800 p-5 font-mono text-xs text-neutral-300 space-y-2 shadow-xl">
               <div className="flex items-center justify-between pb-2 border-b border-neutral-800 text-[11px] text-neutral-400">
                 <div className="flex items-center gap-2">
                   <Terminal size={14} className="text-emerald-400" />
@@ -495,7 +495,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
           )}
 
           {/* Crawler Portals List */}
-          <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 space-y-4">
+          <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/[0.04] dark:border-white/[0.04]">
               <div>
                 <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
@@ -518,7 +518,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20">
                         {source.country}
                       </span>
                       <span className="text-[10px] text-neutral-400">
@@ -546,7 +546,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
                       href={source.officialPortalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
+                      className="text-[11px] text-brass dark:text-brass-lt hover:underline flex items-center gap-1 font-medium"
                     >
                       <span>Official Portal</span>
                       <ExternalLink size={11} />
@@ -570,7 +570,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
 
       {/* TAB 2: OPEN DATASET BUNDLES */}
       {activeTab === 'bundles' && (
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 sm:p-8 space-y-6">
           <div>
             <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
               Curated Open Dataset Bundles
@@ -588,7 +588,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    <span className="px-2 py-0.5 rounded-md bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20">
                       {bundle.region}
                     </span>
                     <span className="text-neutral-500">
@@ -614,7 +614,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
                     href={bundle.portalUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
+                    className="text-xs text-brass dark:text-brass-lt hover:underline flex items-center gap-1 font-medium"
                   >
                     <span>Inspect Portal</span>
                     <ExternalLink size={12} />
@@ -622,7 +622,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
 
                   <button
                     onClick={() => handleIngestBundle(bundle)}
-                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1 cursor-pointer"
                   >
                     <Plus size={13} />
                     <span>Ingest Bundle</span>
@@ -636,7 +636,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
 
       {/* TAB 3: BATCH INGESTION (JSON / CSV) */}
       {activeTab === 'import' && (
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-black/[0.04] dark:border-white/[0.04]">
             <div>
               <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
@@ -651,7 +651,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
               <button
                 onClick={() => setImportFormat('json')}
                 className={`px-3 py-1 rounded-xl text-xs font-semibold cursor-pointer ${
-                  importFormat === 'json' ? 'bg-blue-600 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600'
+                  importFormat === 'json' ? 'bg-ink text-paper dark:bg-paper dark:text-ink' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600'
                 }`}
               >
                 JSON Format
@@ -659,7 +659,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
               <button
                 onClick={() => setImportFormat('csv')}
                 className={`px-3 py-1 rounded-xl text-xs font-semibold cursor-pointer ${
-                  importFormat === 'csv' ? 'bg-blue-600 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600'
+                  importFormat === 'csv' ? 'bg-ink text-paper dark:bg-paper dark:text-ink' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600'
                 }`}
               >
                 CSV Format
@@ -680,7 +680,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
                   ? '[\n  {\n    "title": "Government Excellence Award",\n    "provider": "Ministry of Higher Education",\n    "officialProgramUrl": "https://example.gov/scholarships",\n    "destinationCountries": ["Germany"],\n    "academicLevels": ["Master\'s"],\n    "fundingType": "100% Fully Funded"\n  }\n]'
                   : 'title,provider,officialProgramUrl,destinationCountries,academicLevels,fundingType\nNational Fellowship,Ministry of Science,https://example.gov/fellowship,Canada,Doctoral / PhD,100% Fully Funded'
               }
-              className="w-full p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950 font-mono text-xs text-neutral-800 dark:text-neutral-200 border border-black/[0.08] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950 font-mono text-xs text-neutral-800 dark:text-neutral-200 border border-black/[0.08] dark:border-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
             />
           </div>
 
@@ -716,7 +716,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
             <button
               onClick={handleExecuteImport}
               disabled={isProcessing || !importJsonText.trim()}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 disabled:opacity-40 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
             >
               <Upload size={14} />
               <span>{isProcessing ? 'Processing...' : 'Run Ingestion Pipeline'}</span>
@@ -727,7 +727,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
 
       {/* TAB 4: SOURCE REGISTRY MANAGER */}
       {activeTab === 'registry' && (
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/[0.04] dark:border-white/[0.04]">
             <div>
               <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
@@ -740,7 +740,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
 
             <button
               onClick={() => setShowAddSourceModal(true)}
-              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+              className="px-3.5 py-2 rounded-xl bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
             >
               <Plus size={14} />
               <span>Register New Official Source</span>
@@ -811,7 +811,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
                         href={s.officialPortalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
+                        className="text-brass dark:text-brass-lt hover:underline flex items-center gap-1 font-medium"
                       >
                         <span>Visit</span>
                         <ExternalLink size={11} />
@@ -827,7 +827,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
 
       {/* TAB 5: INGESTION AUDIT LOGS */}
       {activeTab === 'logs' && (
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 sm:p-8 space-y-4">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-black/[0.04] dark:border-white/[0.04]">
             <div>
               <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
@@ -879,7 +879,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
 
       {/* TAB 6: REVIEW QUEUE */}
       {activeTab === 'review' && (
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 sm:p-8 space-y-4">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-black/[0.04] dark:border-white/[0.04]">
             <div>
               <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
@@ -918,7 +918,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
                       href={item.officialProgramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                      className="text-xs text-brass hover:underline flex items-center gap-1"
                     >
                       <span>Check Decree</span>
                       <ExternalLink size={12} />
@@ -934,7 +934,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
       {/* MODAL: REGISTER NEW OFFICIAL SOURCE */}
       {showAddSourceModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-3xl border border-black/[0.08] dark:border-white/[0.08] shadow-2xl p-6 sm:p-8 space-y-5">
+          <div className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] shadow-2xl p-6 sm:p-8 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-black/[0.04] dark:border-white/[0.04]">
               <h3 className="text-base font-bold text-neutral-900 dark:text-white">
                 Register New Official Source Portal
@@ -1046,7 +1046,7 @@ export const DataIngestionView: React.FC<DataIngestionViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white font-semibold cursor-pointer"
                 >
                   Save to Registry
                 </button>

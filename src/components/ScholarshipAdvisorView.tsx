@@ -76,6 +76,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
     hasApiKey: boolean;
     model: string;
     isAvailable: boolean;
+    setupHint?: string;
   }>({
     ok: true,
     hasApiKey: true,
@@ -220,8 +221,8 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             {/* Status Indicator */}
             {isDemoMode ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-brass-tint dark:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/25 dark:border-brass-lt/25">
+                <span className="w-1.5 h-1.5 rounded-full bg-brass dark:bg-brass-lt"></span>
                 <span>Demo Mode (Zero API Usage)</span>
               </span>
             ) : serverHealth.isAvailable ? (
@@ -239,11 +240,18 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
             <span className="text-xs text-neutral-500 dark:text-neutral-400">
               Deterministic Bylaws & Strategic Counsel
             </span>
+
+            {!isDemoMode && serverHealth.ok && !serverHealth.hasApiKey && (
+              <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                {serverHealth.setupHint ||
+                  'Add GEMINI_API_KEY in Settings → Environment to enable Live AI.'}
+              </span>
+            )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mt-1 flex items-center gap-2">
+          <h1 className="font-display text-2xl sm:text-[28px] font-semibold tracking-tight text-neutral-900 dark:text-white mt-1 flex items-center gap-2">
             <span>Scholarship Advisor</span>
-            <Sparkles size={22} className="text-blue-600 dark:text-blue-400" />
+            <Sparkles size={22} className="text-brass dark:text-brass-lt" />
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1 max-w-2xl">
             Get concise, actionable strategy grounded strictly in verified scholarship decrees and your academic profile.
@@ -264,7 +272,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
           <button
             onClick={() => handleToggleDemoMode(!isDemoMode)}
             className={`w-11 h-6 rounded-full transition-colors p-0.5 flex items-center cursor-pointer ${
-              isDemoMode ? 'bg-indigo-600 justify-end' : 'bg-neutral-300 dark:bg-neutral-700 justify-start'
+              isDemoMode ? 'bg-ink dark:bg-paper justify-end' : 'bg-neutral-300 dark:bg-neutral-700 justify-start'
             }`}
             title="Toggle Demo Mode to test without making AI API calls"
           >
@@ -275,7 +283,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
 
       {/* Zero Paid Services & Privacy Banner */}
       <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-black/[0.04] dark:border-white/[0.06] text-xs text-neutral-600 dark:text-neutral-400 flex items-start gap-3">
-        <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
+        <Info size={16} className="text-brass dark:text-brass-lt shrink-0 mt-0.5" />
         <div className="leading-relaxed">
           <strong className="font-semibold text-neutral-900 dark:text-white">
             Zero Paid Service Requirement & Minimal Payload Discipline:
@@ -287,12 +295,12 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
       {/* Selected Opportunity & Student Profile Context Bar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Opportunity Selector (2 Cols) */}
-        <div className="md:col-span-2 p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-xs space-y-3">
+        <div className="md:col-span-2 p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3">
           <div className="flex items-center justify-between text-xs text-neutral-500">
             <span className="font-semibold uppercase text-[10px] tracking-wider text-neutral-400">
               Target Opportunity Context
             </span>
-            <span className="text-[11px] text-blue-600 dark:text-blue-400">
+            <span className="text-[11px] text-brass dark:text-brass-lt">
               {scholarships.length} Verified Programs Available
             </span>
           </div>
@@ -339,7 +347,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
                   href={activeScholarship.officialProgramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  className="font-semibold text-brass dark:text-brass-lt hover:underline flex items-center gap-1"
                 >
                   <span>Portal</span>
                   <ExternalLink size={10} />
@@ -350,7 +358,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
         </div>
 
         {/* Student Profile Snapshot (1 Col) */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3">
+        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3">
           <div>
             <div className="flex items-center justify-between text-xs text-neutral-500 mb-2">
               <span className="font-semibold uppercase text-[10px] tracking-wider text-neutral-400">
@@ -358,7 +366,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
               </span>
               <button
                 onClick={onOpenProfile}
-                className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+                className="text-[11px] text-brass dark:text-brass-lt hover:underline font-medium cursor-pointer"
               >
                 Edit
               </button>
@@ -430,11 +438,11 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
               disabled={isLoading}
               className={`p-3.5 rounded-2xl border text-left transition cursor-pointer flex items-start gap-2.5 ${
                 activeQuestion === item.question
-                  ? 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-500/30 text-blue-950 dark:text-blue-100'
+                  ? 'bg-brass-tint dark:bg-brass-lt/10 border-brass/40 dark:border-brass-lt/30 text-brass-strong dark:text-brass-lt'
                   : 'bg-white dark:bg-neutral-900 border-black/[0.06] dark:border-white/[0.08] hover:border-black/20 dark:hover:border-white/20 text-neutral-800 dark:text-neutral-200 shadow-xs'
               }`}
             >
-              <div className="p-1 rounded-lg bg-blue-500/10 text-blue-600 shrink-0 mt-0.5">
+              <div className="p-1 rounded-lg bg-brass-tint dark:bg-brass-lt/10 text-brass dark:text-brass-lt shrink-0 mt-0.5">
                 <FileText size={13} />
               </div>
               <div className="flex-1">
@@ -449,7 +457,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
       </div>
 
       {/* Custom Inquiry Input Area */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-xs space-y-3">
+      <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3">
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
           Or Ask a Custom Strategic Question:
         </label>
@@ -471,7 +479,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
           <button
             onClick={() => handleAskAdvisor(questionInput)}
             disabled={!questionInput.trim() || isLoading}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer shrink-0"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer shrink-0"
           >
             {isLoading ? (
               <>
@@ -490,9 +498,9 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
 
       {/* Loading Skeleton */}
       {isLoading && (
-        <div className="p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-4 animate-pulse">
+        <div className="p-8 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-4 animate-pulse">
           <div className="flex items-center gap-3">
-            <RefreshCw size={16} className="text-blue-600 animate-spin" />
+            <RefreshCw size={16} className="text-brass dark:text-brass-lt animate-spin" />
             <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
               {loadingStep || 'Evaluating criteria...'}
             </span>
@@ -513,7 +521,9 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
             <AlertCircle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-bold text-amber-900 dark:text-amber-200">
-                Live AI Service Offline or Rate Limited
+                {errorState.errorCode === 'CONFIG_MISSING'
+                  ? 'Live AI Not Configured'
+                  : 'Live AI Service Offline or Rate Limited'}
               </h4>
               <p className="text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
                 {errorState.message}
@@ -528,7 +538,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
             {errorState.canUseDemoFallback && (
               <button
                 onClick={handleFallbackToDemo}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-4 py-2 rounded-xl bg-brass hover:bg-brass-strong dark:bg-brass-lt dark:hover:bg-brass dark:text-ink text-white font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Bot size={13} />
                 <span>View Saved Demo Answer for this Question</span>
@@ -547,12 +557,12 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
 
       {/* Advisor Response Display Card */}
       {currentResponse && !isLoading && (
-        <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs p-6 sm:p-8 space-y-6">
           {/* Response Metadata Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-black/[0.04] dark:border-white/[0.04]">
             <div className="flex flex-wrap items-center gap-2">
               {currentResponse.isDemo ? (
-                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-brass-tint dark:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/25 dark:border-brass-lt/25 flex items-center gap-1">
                   <Bot size={12} />
                   <span>DEMO MODE: PRE-GENERATED EXAMPLE ANSWER</span>
                 </span>
@@ -615,7 +625,7 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
               <div className="space-y-1.5">
                 {currentResponse.keyActionItems.map((action, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs text-neutral-700 dark:text-neutral-300">
-                    <CheckCircle2 size={13} className="text-blue-600 shrink-0" />
+                    <CheckCircle2 size={13} className="text-brass dark:text-brass-lt shrink-0" />
                     <span>{action}</span>
                   </div>
                 ))}
@@ -625,14 +635,24 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
 
           {/* Footer of Card */}
           <div className="pt-3 border-t border-black/[0.04] dark:border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-neutral-400">
-            <div>
+            <div className="flex items-center gap-3">
               <span>Stifled Hallucinations: Grounded strictly against {activeScholarship.provider} verified facts.</span>
+              <a
+                href={activeScholarship.officialProgramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brass dark:text-brass-lt hover:underline font-semibold flex items-center gap-1"
+                title="Verify every detail on the official provider portal before applying"
+              >
+                <span>Verify on official source</span>
+                <ExternalLink size={10} />
+              </a>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={() => onTrackScholarship(activeScholarship.id)}
-                className="text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                className="text-brass dark:text-brass-lt hover:underline font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <Bookmark size={11} />
                 <span>{isTracked ? 'View in Tracker' : 'Save to Tracker Notes'}</span>

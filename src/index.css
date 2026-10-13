@@ -1,25 +1,130 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", "Helvetica Neue", sans-serif;
-  }
+/* Class-based dark mode: App.tsx toggles the `.dark` class on <html>, so the
+   dark: variant must follow the class — not the OS media query. */
+@custom-variant dark (&:where(.dark, .dark *));
 
-  body {
-    font-family: var(--font-apple);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-color: #FBFBFD;
-    color: #1D1D1F;
-  }
+@theme {
+  /* ------------------------------------------------------------------ */
+  /* Typography — "Corporate Trust" pairing (UI/UX Pro Max, typography    */
+  /* domain, mood: trustworthy/accessible/professional for education,     */
+  /* government & finance). Lexend for display/headings, Source Sans 3    */
+  /* for UI text. --font-sans feeds every Tailwind text utility.          */
+  /* ------------------------------------------------------------------ */
+  --font-sans: "Source Sans 3", ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Lexend", "Source Sans 3", ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    "SF Pro Display", "Segoe UI", Roboto, sans-serif;
 
-  .dark body {
-    background-color: #000000;
-    color: #F5F5F7;
+  /* ------------------------------------------------------------------ */
+  /* Brand palette — "premium editorial" identity:                      */
+  /*   ink    : warm near-black. Structure, headings, primary buttons.   */
+  /*   brass  : single restrained accent (eyebrows, indicators, rings).  */
+  /*   emerald: verified / success semantics only.                       */
+  /*   rose   : urgency (closing deadlines) / errors only.               */
+  /* Blue is retired as a brand color on purpose — it was the biggest    */
+  /* "generic AI dashboard" tell in the old UI.                          */
+  /* ------------------------------------------------------------------ */
+  --color-ink: #1c1917;
+  --color-ink-soft: #44403c;
+  --color-paper: #fafaf9;
+  --color-surface: #ffffff;
+  --color-brass: #b45309;
+  --color-brass-strong: #92400e;
+  --color-brass-lt: #f59e0b;
+  --color-brass-tint: #fdf6ec;
+
+  /* ------------------------------------------------------------------ */
+  /* Elevation — warm ink-tinted shadow scale (matches the #1C1917 ink    */
+  /* used across cards/nav) instead of generic cold-black shadows.       */
+  /* ------------------------------------------------------------------ */
+  --shadow-xs: 0 1px 2px rgb(28 25 23 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(28 25 23 / 0.05), 0 1px 3px rgb(28 25 23 / 0.04);
+  --shadow-md: 0 2px 4px -1px rgb(28 25 23 / 0.05), 0 4px 12px -2px rgb(28 25 23 / 0.06);
+  --shadow-lg: 0 4px 8px -2px rgb(28 25 23 / 0.06), 0 12px 28px -6px rgb(28 25 23 / 0.08);
+  --shadow-xl: 0 8px 16px -4px rgb(28 25 23 / 0.07), 0 24px 48px -12px rgb(28 25 23 / 0.1);
+  --shadow-2xl: 0 32px 64px -12px rgb(28 25 23 / 0.14);
+}
+
+/* Horizontal chip/pill rails hide their scrollbar (used in Discovery + Ingestion). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
-/* Subtle Apple-style scrollbar */
+@layer base {
+  :root {
+    --font-apple: var(--font-sans);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Warm paper, matching the neutral-50 token used by cards */
+    background-color: #fafaf9;
+    color: #1d1d1f;
+  }
+
+  .dark body {
+    background-color: #0a0a09;
+    color: #f5f5f7;
+  }
+
+  /* Display hierarchy: Lexend on page/section headings only. Letter-spacing
+     tuned per size — tight for large display sizes, neutral for small. */
+  h1 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* WCAG 2.2 focus appearance: 2px indicator with 3:1+ contrast. Utilities
+     like focus:ring-* still override this where already defined. */
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+  .dark :focus-visible {
+    outline-color: var(--color-brass-lt);
+  }
+
+  /* Consistent affordance for every interactive element. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a[href],
+  select,
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]) {
+    cursor: pointer;
+  }
+
+  /* Smooth hover/press transitions without per-element boilerplate. */
+  button:not(:disabled) {
+    transition-property: background-color, border-color, color, box-shadow, opacity, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+/* Respect the OS reduced-motion setting (UI/UX Pro Max pre-delivery checklist). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Subtle warm scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -28,10 +133,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgb(28 25 23 / 0.15);
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgb(255 255 255 / 0.2);
 }
-

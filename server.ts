@@ -162,6 +162,60 @@ function normalizeScholarshipRecord(rec: any, index: number, fallbackSourceRegis
   return { valid: true, record: normalized };
 }
 
+// Region quick-filter (moved from DiscoveryView so region filtering stays server-side, single pipeline)
+function matchesRegion(s: Scholarship, region: string): boolean {
+  if (region === 'all') return true;
+  const dests = s.destinationCountries.join(' ').toLowerCase();
+  if (region === 'europe') {
+    return (
+      dests.includes('united kingdom') ||
+      dests.includes('germany') ||
+      dests.includes('france') ||
+      dests.includes('switzerland') ||
+      dests.includes('netherlands') ||
+      dests.includes('sweden') ||
+      dests.includes('italy') ||
+      dests.includes('ireland') ||
+      dests.includes('hungary') ||
+      dests.includes('finland') ||
+      dests.includes('norway') ||
+      dests.includes('belgium') ||
+      dests.includes('spain')
+    );
+  }
+  if (region === 'americas') {
+    return dests.includes('united states') || dests.includes('canada') || dests.includes('mexico') || dests.includes('brazil') || dests.includes('chile');
+  }
+  if (region === 'asia-pacific') {
+    return (
+      dests.includes('japan') ||
+      dests.includes('south korea') ||
+      dests.includes('china') ||
+      dests.includes('singapore') ||
+      dests.includes('taiwan') ||
+      dests.includes('hong kong') ||
+      dests.includes('australia') ||
+      dests.includes('new zealand')
+    );
+  }
+  if (region === 'africa-middle-east') {
+    return (
+      dests.includes('south africa') ||
+      dests.includes('turkey') ||
+      dests.includes('saudi arabia') ||
+      dests.includes('egypt') ||
+      dests.includes('ghana') ||
+      dests.includes('nigeria') ||
+      dests.includes('kenya') ||
+      dests.includes('morocco')
+    );
+  }
+  if (region === 'global') {
+    return dests.includes('global') || dests.includes('international') || s.providerType === 'Multilateral Organization';
+  }
+  return true;
+}
+
 // 1. Health & Status
 app.get('/api/status', (req, res) => {
   res.json({
@@ -181,6 +235,7 @@ app.get('/api/scholarships', (req, res) => {
   try {
     const {
       search = '',
+      region = 'all',
       destinationCountry = 'all',
       nationality = 'all',
       academicLevel = 'all',
@@ -260,6 +315,11 @@ app.get('/api/scholarships', (req, res) => {
     // Filter by verification status
     if (verificationStatus && verificationStatus !== 'all') {
       filtered = filtered.filter((s) => s.verificationStatus === verificationStatus);
+    }
+
+    // Filter by region quick pills
+    if (region && region !== 'all') {
+      filtered = filtered.filter((s) => matchesRegion(s, region));
     }
 
     // Calculate dynamic facets across full matching set (before pagination)
@@ -611,78 +671,112 @@ app.get('/api/export', (req, res) => {
 });
 
 // 10. AI Scholarship Advisor Endpoints
+const ADVISOR_MODEL = 'gemini-2.5-flash';
+const ADVISOR_MAX_QUESTION_CHARS = 500;
+const ADVISOR_TIMEOUT_MS = 12000; // server-side Gemini call timeout (client aborts at 14s)
+const ADVISOR_MAX_OUTPUT_TOKENS = 600; // hard cap on answer length (~200-word answer + headroom)
+
+// Presence check only — the raw key never leaves this process.
+function getAdvisorApiKey(): string | null {
+  const key = process.env.GEMINI_API_KEY;
+  return key && key.trim() !== '' && key !== 'MY_GEMINI_API_KEY' ? key.trim() : null;
+}
+
+// Strip the API key (and any ?key= query param) from error text before logs/responses.
+function sanitizeAdvisorErrorText(text: string, apiKey: string | null): string {
+  let safe = String(text || '');
+  if (apiKey) safe = safe.split(apiKey).join('[REDACTED]');
+  return safe.replace(/([?&]key=)[^&\s]+/gi, '$1[REDACTED]');
+}
+
 app.get('/api/advisor/status', (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const hasApiKey = Boolean(apiKey && apiKey.trim() !== '' && apiKey !== 'MY_GEMINI_API_KEY');
+  const hasApiKey = Boolean(getAdvisorApiKey());
   res.json({
     ok: true,
     hasApiKey,
-    model: 'gemini-2.5-flash',
+    model: ADVISOR_MODEL,
     mode: hasApiKey ? 'live' : 'demo-recommended',
+    setupHint: hasApiKey
+      ? undefined
+      : 'GEMINI_API_KEY is not set. Add it in Settings → Environment (server-side only, never in code or Git), then restart the preview to enable Live AI. Demo Mode works without any key.',
     timestamp: new Date().toISOString(),
   });
 });
 
 app.post('/api/advisor', async (req, res) => {
+  const apiKey = getAdvisorApiKey();
+
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    const hasApiKey = Boolean(apiKey && apiKey.trim() !== '' && apiKey !== 'MY_GEMINI_API_KEY');
-
-    if (!hasApiKey) {
-      return res.status(503).json({
-        success: false,
-        error: 'CONFIG_MISSING',
-        message: 'GEMINI_API_KEY is not configured in the server environment. Please enable Demo Mode for instant simulated advisor responses.',
-        demoAvailable: true,
-      });
-    }
-
     const { question, studentProfile, scholarship } = req.body;
 
+    // Validate the request first — cheap and spends no AI tokens.
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
       return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'Missing or empty question' });
+    }
+
+    if (question.length > ADVISOR_MAX_QUESTION_CHARS) {
+      return res.status(400).json({
+        success: false,
+        error: 'QUESTION_TOO_LONG',
+        message: `Question must be ${ADVISOR_MAX_QUESTION_CHARS} characters or fewer so AI input stays bounded.`,
+      });
     }
 
     if (!scholarship || !scholarship.title) {
       return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'Missing scholarship context' });
     }
 
-    // Build minimal context strings
+    if (!apiKey) {
+      return res.status(503).json({
+        success: false,
+        error: 'CONFIG_MISSING',
+        message: 'GEMINI_API_KEY is not configured, so Live AI is offline. Add it in Settings → Environment (server-side only; never commit it to Git) and restart the preview — or use Demo Mode, which needs no key.',
+        demoAvailable: true,
+      });
+    }
+
+    // Bound every interpolated field so prompt token usage stays limited.
+    const clip = (v: unknown, max: number) => String(v ?? '').slice(0, max);
+
+    // Build minimal context strings (only profile fields relevant to the counsel)
     const profileSummary = studentProfile ? [
-      `Academic Level: ${studentProfile.academicLevel || 'Not specified'}`,
+      `Academic Level: ${clip(studentProfile.academicLevel, 60) || 'Not specified'}`,
       `GPA: ${typeof studentProfile.gpa === 'number' ? studentProfile.gpa.toFixed(2) : 'Not specified'}`,
-      `Nationality: ${studentProfile.nationality || 'Not specified'}`,
-      `Country of Residence: ${studentProfile.residenceCountry || studentProfile.nationality || 'Not specified'}`,
-      `Intended Major: ${studentProfile.intendedMajor || 'Undecided'}`,
-      studentProfile.targetDestinationCountry ? `Target Destination: ${studentProfile.targetDestinationCountry}` : null,
+      `Nationality: ${clip(studentProfile.nationality, 80) || 'Not specified'}`,
+      `Country of Residence: ${clip(studentProfile.residenceCountry || studentProfile.nationality, 80) || 'Not specified'}`,
+      `Intended Major: ${clip(studentProfile.intendedMajor, 120) || 'Undecided'}`,
+      studentProfile.targetDestinationCountry ? `Target Destination: ${clip(studentProfile.targetDestinationCountry, 80)}` : null,
       studentProfile.hasFinancialNeed ? `Demonstrated Financial Need: Yes` : null,
     ].filter(Boolean).join('\n') : 'Profile not configured.';
 
     const scholarshipSummary = [
-      `Title: ${scholarship.title}`,
-      `Sponsoring Provider: ${scholarship.provider || 'Official Provider'}`,
-      `Destination Countries: ${(scholarship.destinationCountries || []).join(', ') || 'Global'}`,
-      `Eligible Academic Levels: ${(scholarship.academicLevels || []).join(', ') || 'All levels'}`,
-      `Funding Type: ${scholarship.fundingType || 'Published on portal'}`,
-      `Tuition Coverage: ${scholarship.tuitionCoverage || 'See portal'}`,
-      `Living Allowance / Stipend: ${scholarship.stipendAndOtherBenefits || 'See portal'}`,
-      `Academic Requirements: ${(scholarship.academicRequirements || []).join('; ') || 'Standard entry criteria'}`,
-      `Required Documents: ${(scholarship.requiredDocuments || []).join(', ') || 'Standard transcripts and recommendations'}`,
-      `Official Deadline: ${scholarship.deadline || 'Consult official portal'}`,
-      `Official Program URL: ${scholarship.officialProgramUrl || 'Verified statutory source'}`,
+      `Title: ${clip(scholarship.title, 200)}`,
+      `Sponsoring Provider: ${clip(scholarship.provider || 'Official Provider', 160)}`,
+      `Destination Countries: ${clip((scholarship.destinationCountries || []).join(', '), 200) || 'Global'}`,
+      `Eligible Academic Levels: ${clip((scholarship.academicLevels || []).join(', '), 160) || 'All levels'}`,
+      `Funding Type: ${clip(scholarship.fundingType, 120) || 'Published on portal'}`,
+      `Tuition Coverage: ${clip(scholarship.tuitionCoverage, 160) || 'See portal'}`,
+      `Living Allowance / Stipend: ${clip(scholarship.stipendAndOtherBenefits, 240) || 'See portal'}`,
+      `Academic Requirements: ${clip((scholarship.academicRequirements || []).slice(0, 8).join('; '), 600) || 'Standard entry criteria'}`,
+      `Required Documents: ${clip((scholarship.requiredDocuments || []).slice(0, 8).join(', '), 400) || 'Standard transcripts and recommendations'}`,
+      `Official Deadline: ${clip(scholarship.deadline, 120) || 'Consult official portal'}`,
+      `Official Program URL: ${clip(scholarship.officialProgramUrl, 300) || 'Not provided — advise the student to locate the official portal'}`,
     ].join('\n');
 
     const prompt = `You are the OpportunityLens Senior Scholarship Advisor.
 Provide expert, tailored, actionable application counsel for a student applying to this specific verified scholarship.
 
 STRICT CONSTRAINTS:
-1. Base your counsel strictly on the verified scholarship record and student profile below.
+1. Base your counsel strictly on the verified scholarship record and student profile below. The record is the ONLY source of scholarship-specific facts.
 2. Keep your response strictly under 200 words. Be direct, structured, and concise.
 3. Organize into 2-3 short bulleted sections:
    • Strategic Positioning (how student's background aligns with this award)
    • Crucial Requirement & Documents (key priorities, pitfalls to avoid)
    • Immediate Action & Timeline (practical next steps before the deadline)
-4. Never speculate or invent requirements not in the record.
+4. Never invent scholarships, deadlines, eligibility rules, funding amounts, or requirements that are not in the record. If asked about an award that is not in the record, say so — do not fabricate one.
+5. If the record does not contain a detail, write "not specified in the official record — verify with the provider" instead of guessing.
+6. Separate verified facts (quoted from the record) from your strategic advice, and cite the Official Program URL when referencing the award.
+7. End with a one-line reminder to verify every detail on the official provider portal before applying.
 
 STUDENT PROFILE:
 ${profileSummary}
@@ -691,15 +785,29 @@ VERIFIED SCHOLARSHIP RECORD:
 ${scholarshipSummary}
 
 STUDENT QUESTION:
-"${question.trim()}"`;
+"${clip(question.trim(), ADVISOR_MAX_QUESTION_CHARS)}"`;
 
-    const ai = new GoogleGenAI();
+    // One AI call per request: the SDK performs no retries unless retryOptions is set,
+    // and the single brief retry lives client-side in advisorService.ts.
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        baseUrl: process.env.GEMINI_BASE_URL || undefined,
+        timeout: ADVISOR_TIMEOUT_MS,
+      },
+    });
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: ADVISOR_MODEL,
       contents: prompt,
       config: {
-        maxOutputTokens: 400,
+        maxOutputTokens: ADVISOR_MAX_OUTPUT_TOKENS,
         temperature: 0.3,
+        // gemini-2.5-flash thinks by default, and thinking tokens count against
+        // maxOutputTokens — at 400 the model burned 380 on reasoning and the answer
+        // was cut off mid-word (finishReason MAX_TOKENS). This is a short, highly
+        // constrained formatting task, so reasoning is disabled: complete answers,
+        // ~1.7s latency, and a smaller token bill than letting it think.
+        thinkingConfig: { thinkingBudget: 0 },
       },
     });
 
@@ -735,11 +843,15 @@ STUDENT QUESTION:
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('Error in /api/advisor:', error);
-    const msg = error.message || '';
+    const safeMsg = sanitizeAdvisorErrorText(error?.message || String(error || ''), apiKey);
+    const msgLower = safeMsg.toLowerCase();
+    const errStatus = typeof error?.status === 'number' ? error.status : null;
+    const errName = String(error?.name || '').toLowerCase();
 
-    // Handle 429 quota exhaustion
-    if (msg.includes('429') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate limit')) {
+    console.error('Error in /api/advisor:', errStatus ? `[${errStatus}] ${safeMsg}` : safeMsg);
+
+    // Handle 429 quota exhaustion (not retried — retrying a spent quota is pointless)
+    if (errStatus === 429 || safeMsg.includes('429') || msgLower.includes('quota') || msgLower.includes('rate limit')) {
       return res.status(429).json({
         success: false,
         error: 'QUOTA_EXHAUSTED',
@@ -748,8 +860,8 @@ STUDENT QUESTION:
       });
     }
 
-    // Handle 503 or overload
-    if (msg.includes('503') || msg.toLowerCase().includes('overloaded') || msg.toLowerCase().includes('unavailable')) {
+    // Handle 503 or overload (temporary: the client applies its single brief retry)
+    if (errStatus === 503 || safeMsg.includes('503') || msgLower.includes('overloaded') || msgLower.includes('unavailable')) {
       return res.status(503).json({
         success: false,
         error: 'SERVICE_UNAVAILABLE',
@@ -758,10 +870,30 @@ STUDENT QUESTION:
       });
     }
 
+    // Timeouts & transport failures are temporary too → 503 so exactly one client retry applies
+    if (
+      errName.includes('timeout') ||
+      errName.includes('abort') ||
+      msgLower.includes('timeout') ||
+      msgLower.includes('timed out') ||
+      msgLower.includes('aborted') ||
+      msgLower.includes('etimedout') ||
+      msgLower.includes('econnreset') ||
+      msgLower.includes('fetch failed') ||
+      msgLower.includes('network')
+    ) {
+      return res.status(503).json({
+        success: false,
+        error: 'SERVICE_UNAVAILABLE',
+        message: 'The AI advisor request timed out or lost connectivity. Retry once, or open a saved demo answer.',
+        demoAvailable: true,
+      });
+    }
+
     return res.status(500).json({
       success: false,
       error: 'SERVER_ERROR',
-      message: msg || 'An unexpected error occurred while contacting the AI advisor.',
+      message: safeMsg || 'An unexpected error occurred while contacting the AI advisor.',
       demoAvailable: true,
     });
   }
