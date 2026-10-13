@@ -12,6 +12,8 @@ export const INITIAL_STUDENT_PROFILE: StudentProfile = {
   id: 'student-demo-1',
   name: 'Alex Rivera',
   academicLevel: "Master's",
+  graduationYear: 2025,
+  curriculum: 'National University Honours',
   grade: null,
   age: 22,
   countryOfResidence: 'Nigeria',
@@ -20,6 +22,7 @@ export const INITIAL_STUDENT_PROFILE: StudentProfile = {
   fieldOfStudy: 'Public Policy & Sustainable Energy Economics',
   academicInterests: ['Public Policy', 'Development Economics', 'Renewable Energy', 'International Relations'],
   gpa: 3.85,
+  gradingScale: '4.0 Scale',
   academicAchievements: [
     'University Valedictorian (First Class Honours)',
     'Youth Delegate to UN Climate Conference',
@@ -40,6 +43,49 @@ export const INITIAL_STUDENT_PROFILE: StudentProfile = {
   preferredFundingTypes: ['100% Fully Funded', 'Tuition Waiver'],
   onboardingCompleted: true,
 };
+
+export const EMPTY_STUDENT_PROFILE: StudentProfile = {
+  id: 'student-new',
+  name: '',
+  academicLevel: 'Undergraduate',
+  graduationYear: new Date().getFullYear() + 1,
+  curriculum: 'International Baccalaureate (IB)',
+  grade: 12,
+  age: 18,
+  countryOfResidence: '',
+  nationalities: [],
+  intendedDestinationCountries: [],
+  fieldOfStudy: '',
+  academicInterests: [],
+  gpa: 3.8,
+  gradingScale: '4.0 Scale',
+  academicAchievements: [],
+  standardizedTests: {
+    toeflIelts: false,
+    hasApOrIb: false,
+  },
+  fundingNeeds: {
+    needsTuition: true,
+    needsAccommodation: true,
+    needsMeals: false,
+    needsTravel: false,
+    maxBudgetUsd: 1000,
+  },
+  hasFinancialNeed: false,
+  preferredFundingTypes: ['100% Fully Funded'],
+  onboardingCompleted: false,
+};
+
+export function hasUserCompletedOnboarding(): boolean {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return Boolean(parsed.onboardingCompleted);
+  } catch {
+    return false;
+  }
+}
 
 export const INITIAL_TRACKER_ITEMS: ApplicationTrackerItem[] = [
   {

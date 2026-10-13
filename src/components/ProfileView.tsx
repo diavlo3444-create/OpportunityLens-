@@ -179,13 +179,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             <div>
               <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Cumulative GPA (out of 4.0)
+                Cumulative GPA / Average
               </label>
               <input
                 type="number"
                 step="0.01"
-                min="1.0"
-                max="4.0"
+                min="0"
+                max="100"
                 value={formData.gpa ?? ''}
                 onChange={(e) =>
                   setFormData({
@@ -193,6 +193,52 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     gpa: e.target.value ? parseFloat(e.target.value) : null,
                   })
                 }
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Graduation / Entry Year
+              </label>
+              <input
+                type="number"
+                min="2020"
+                max="2035"
+                value={formData.graduationYear || ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    graduationYear: e.target.value ? parseInt(e.target.value, 10) : null,
+                  })
+                }
+                placeholder="e.g. 2026"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                School Curriculum / Program
+              </label>
+              <input
+                type="text"
+                value={formData.curriculum || ''}
+                onChange={(e) => setFormData({ ...formData, curriculum: e.target.value })}
+                placeholder="e.g. International Baccalaureate (IB), AP, A-Levels, University Honours"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Grading Scale
+              </label>
+              <input
+                type="text"
+                value={formData.gradingScale || '4.0 Scale'}
+                onChange={(e) => setFormData({ ...formData, gradingScale: e.target.value })}
+                placeholder="e.g. 4.0 Scale, 100% Scale, 5.0 Scale"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-black/[0.08] dark:border-white/[0.08] text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-brass dark:focus:ring-brass-lt"
               />
             </div>

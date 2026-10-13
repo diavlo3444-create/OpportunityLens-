@@ -174,6 +174,8 @@ export interface StudentProfile {
   id: string;
   name: string;
   academicLevel: AcademicLevel;
+  graduationYear?: number | null;
+  curriculum?: string;
   grade: number | null;
   age: number | null;
   countryOfResidence: string; // ISO code or country name
@@ -182,11 +184,15 @@ export interface StudentProfile {
   fieldOfStudy: string;
   academicInterests: string[];
   gpa: number | null;
+  gradingScale?: string;
   academicAchievements: string[];
   standardizedTests: {
     sat?: number;
+    act?: number;
     gre?: number;
     toeflIelts?: boolean;
+    toeflScore?: number;
+    ieltsScore?: number;
     hasApOrIb?: boolean;
   };
   fundingNeeds: {
@@ -201,7 +207,11 @@ export interface StudentProfile {
   onboardingCompleted: boolean;
 }
 
+export type EligibilityTier = 'eligible' | 'needs_verification' | 'ineligible';
+
 export type EligibilityStatus =
+  | 'eligible'
+  | 'needs_verification'
   | 'likely_eligible'
   | 'potentially_eligible'
   | 'ineligible'
@@ -218,6 +228,7 @@ export interface RequirementAuditItem {
   officialQuote: string;
   officialSourceUrl: string;
   missingInfoNote?: string;
+  isMandatory?: boolean;
 }
 
 export interface MatchScoreBreakdown {
@@ -232,6 +243,7 @@ export interface EligibilityReport {
   opportunityId: string;
   opportunityTitle: string;
   status: EligibilityStatus;
+  computedTier: EligibilityTier;
   overallScore: number; // 0 to 100
   scoreBreakdown: MatchScoreBreakdown;
   scoreExplanation: string;
@@ -239,6 +251,8 @@ export interface EligibilityReport {
   summaryReasoning: string;
   audits: RequirementAuditItem[];
   missingProfileFields: string[];
+  unmetRequirements: string[];
+  verificationNeededItems: string[];
   disclaimers: string[];
   lastEvaluatedAt: string;
 }

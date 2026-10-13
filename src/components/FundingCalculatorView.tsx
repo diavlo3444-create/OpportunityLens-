@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Opportunity, StudentProfile } from '../types';
 import { calculateOpportunityFunding, UserCustomFundingExpenses } from '../utils/fundingCalculator';
+import { AnimatedCounter } from './UiKit';
 
 interface FundingCalculatorViewProps {
   opportunities: Opportunity[];
@@ -93,12 +94,12 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
       {/* KPI Highlight Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Cost */}
-        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
+        <div className="interactive-card p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
             Total Program Cost
           </span>
           <div className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
-            ${fundingResult.totalEstimatedCostUsd.toLocaleString()}
+            $<AnimatedCounter value={fundingResult.totalEstimatedCostUsd} formatter={(v) => v.toLocaleString()} />
           </div>
           <span className="text-[11px] text-neutral-500">
             Full retail estimate
@@ -106,12 +107,12 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
         </div>
 
         {/* Confirmed Funding */}
-        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
+        <div className="interactive-card p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
             Confirmed Funding
           </span>
           <div className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-            ${fundingResult.confirmedFundingUsd.toLocaleString()}
+            $<AnimatedCounter value={fundingResult.confirmedFundingUsd} formatter={(v) => v.toLocaleString()} />
           </div>
           <span className="text-[11px] text-neutral-500">
             Guaranteed sponsor grants
@@ -119,12 +120,12 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
         </div>
 
         {/* Remaining Uncovered */}
-        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
+        <div className="interactive-card p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400">
             Out-of-Pocket Expense
           </span>
           <div className={`text-2xl sm:text-3xl font-bold ${fundingResult.uncoveredCostUsd === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-900 dark:text-white'}`}>
-            ${fundingResult.uncoveredCostUsd.toLocaleString()}
+            $<AnimatedCounter value={fundingResult.uncoveredCostUsd} formatter={(v) => v.toLocaleString()} />
           </div>
           <span className="text-[11px] text-neutral-500">
             {fundingResult.uncoveredCostUsd === 0 ? '$0 cost to attend!' : 'Remaining student cost'}
@@ -132,16 +133,16 @@ export const FundingCalculatorView: React.FC<FundingCalculatorViewProps> = ({
         </div>
 
         {/* Percentage Covered */}
-        <div className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
+        <div className="interactive-card p-5 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brass dark:text-brass-lt">
             Coverage Rate
           </span>
           <div className="text-2xl sm:text-3xl font-display font-semibold text-brass dark:text-brass-lt">
-            {fundingResult.coveragePercentage}%
+            <AnimatedCounter value={fundingResult.coveragePercentage} />%
           </div>
           <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden mt-1">
             <div
-              className="h-full bg-brass dark:bg-brass-lt rounded-full"
+              className="h-full bg-brass dark:bg-brass-lt rounded-full transition-all duration-500 ease-out"
               style={{ width: `${fundingResult.coveragePercentage}%` }}
             />
           </div>

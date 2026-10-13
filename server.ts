@@ -826,9 +826,16 @@ STUDENT QUESTION:
     // Extract bullet points as key action items
     const lines = adviceText.split('\n').map((l) => l.trim());
     const actionItems = lines
-      .filter((l) => l.startsWith('•') || l.startsWith('-') || l.startsWith('*'))
-      .map((l) => l.replace(/^[•\-*]\s*/, '').replace(/^\*\*.*?\*\*:\s*/, '').slice(0, 120))
-      .filter(Boolean)
+      .filter((l) => /^[•\-*]/.test(l))
+      .map((l) =>
+        l
+          .replace(/^[•\-*]+\s*/, '')
+          .replace(/^\*\*(.*?)\*\*:\s*/, '$1: ')
+          .replace(/[*_#`]/g, '')
+          .trim()
+          .slice(0, 140)
+      )
+      .filter((item) => item.length > 5)
       .slice(0, 3);
 
     return res.json({

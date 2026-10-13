@@ -117,24 +117,23 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
             <div className="flex items-center gap-3">
               <div
                 className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 text-xs sm:text-sm font-bold shadow-sm ${
-                  report.status === 'likely_eligible'
+                  report.computedTier === 'eligible'
                     ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40'
-                    : report.status === 'ineligible'
+                    : report.computedTier === 'ineligible'
                     ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40'
                     : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40'
                 }`}
               >
-                {report.status === 'likely_eligible' && <CheckCircle2 size={18} className="text-emerald-600" />}
-                {report.status === 'ineligible' && <XCircle size={18} className="text-rose-600" />}
-                {report.status === 'potentially_eligible' && <AlertTriangle size={18} className="text-amber-600" />}
-                {report.status === 'insufficient_info' && <HelpCircle size={18} className="text-neutral-500" />}
+                {report.computedTier === 'eligible' && <CheckCircle2 size={18} className="text-emerald-600" />}
+                {report.computedTier === 'ineligible' && <XCircle size={18} className="text-rose-600" />}
+                {report.computedTier === 'needs_verification' && <AlertTriangle size={18} className="text-amber-600" />}
                 <span>{report.headline}</span>
               </div>
 
               {onOpenAdvisor && (
                 <button
                   onClick={() => onOpenAdvisor(activeSch.id)}
-                  className="px-3.5 py-2 rounded-xl bg-brass-tint dark:bg-brass-lt/10 hover:bg-brass/10 dark:hover:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-3.5 py-2 rounded-xl bg-brass-tint dark:bg-brass-lt/10 hover:bg-brass/10 dark:hover:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20 text-xs font-semibold transition-all duration-150 active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-xs"
                   title="Consult AI Scholarship Advisor"
                 >
                   <Sparkles size={14} />
@@ -144,9 +143,9 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
 
               <button
                 onClick={() => onTrackScholarship(activeSch.id)}
-                className={`p-2.5 rounded-2xl border transition cursor-pointer ${
+                className={`p-2.5 rounded-2xl border transition-all duration-150 active:scale-125 cursor-pointer ${
                   isTracked
-                    ? 'bg-ink text-paper dark:bg-paper dark:text-ink border-transparent dark:border-paper'
+                    ? 'bg-ink text-paper dark:bg-paper dark:text-ink border-transparent dark:border-paper shadow-xs'
                     : 'border-black/[0.08] dark:border-white/[0.08] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                 }`}
                 title={isTracked ? 'Tracked in Applications' : 'Add to Application Tracker'}
@@ -179,35 +178,35 @@ export const EligibilityEngineView: React.FC<EligibilityEngineViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1">
-            <div className="p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
+            <div className="interactive-card p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
               <span className="text-[10px] font-semibold text-neutral-400 block uppercase">Degree Level</span>
               <span className="font-bold text-sm text-neutral-900 dark:text-white">
                 {report.scoreBreakdown.academicLevelFit}/25
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
+            <div className="interactive-card p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
               <span className="text-[10px] font-semibold text-neutral-400 block uppercase">Nationality/Residence</span>
               <span className="font-bold text-sm text-neutral-900 dark:text-white">
                 {report.scoreBreakdown.nationalityResidenceFit}/25
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
+            <div className="interactive-card p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
               <span className="text-[10px] font-semibold text-neutral-400 block uppercase">Subject Scope</span>
               <span className="font-bold text-sm text-neutral-900 dark:text-white">
                 {report.scoreBreakdown.subjectDisciplineFit}/20
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
+            <div className="interactive-card p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
               <span className="text-[10px] font-semibold text-neutral-400 block uppercase">Academic Metrics</span>
               <span className="font-bold text-sm text-neutral-900 dark:text-white">
                 {report.scoreBreakdown.academicThresholdFit}/20
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
+            <div className="interactive-card p-3 rounded-2xl bg-white dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.04]">
               <span className="text-[10px] font-semibold text-neutral-400 block uppercase">Funding Alignment</span>
               <span className="font-bold text-sm text-neutral-900 dark:text-white">
                 {report.scoreBreakdown.fundingAlignmentFit}/10

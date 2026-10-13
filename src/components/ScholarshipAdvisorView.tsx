@@ -436,9 +436,9 @@ export const ScholarshipAdvisorView: React.FC<ScholarshipAdvisorViewProps> = ({
                 handleAskAdvisor(item.question);
               }}
               disabled={isLoading}
-              className={`p-3.5 rounded-2xl border text-left transition cursor-pointer flex items-start gap-2.5 ${
+              className={`interactive-card p-3.5 rounded-2xl border text-left transition-all duration-150 active:scale-[0.99] cursor-pointer flex items-start gap-2.5 ${
                 activeQuestion === item.question
-                  ? 'bg-brass-tint dark:bg-brass-lt/10 border-brass/40 dark:border-brass-lt/30 text-brass-strong dark:text-brass-lt'
+                  ? 'bg-brass-tint dark:bg-brass-lt/10 border-brass/40 dark:border-brass-lt/30 text-brass-strong dark:text-brass-lt shadow-xs'
                   : 'bg-white dark:bg-neutral-900 border-black/[0.06] dark:border-white/[0.08] hover:border-black/20 dark:hover:border-white/20 text-neutral-800 dark:text-neutral-200 shadow-xs'
               }`}
             >

@@ -29,6 +29,8 @@ import { Scholarship, StudentProfile, EligibilityStatus } from '../types';
 import { evaluateStudentEligibility } from '../utils/eligibilityEngine';
 import { fetchScholarships, postBatchIngest, ScholarshipQueryResponse } from '../utils/apiClient';
 import { GLOBAL_SCHOLARSHIPS } from '../data/scholarships';
+import { Skeleton } from './UiKit';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface DiscoveryViewProps {
   scholarships: Scholarship[];
@@ -573,22 +575,31 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
           </button>
         </div>
       ) : isLoading && !results ? (
-        /* Initial loading skeleton */
+        /* Initial loading skeleton with shimmer effect */
         <div className="space-y-4">
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 animate-pulse">
-            Querying the global scholarship index…
-          </p>
+          <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="h-2 w-2 rounded-full bg-brass dark:bg-brass-lt animate-ambient-pulse" />
+            <span>Querying the global scholarship index…</span>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] p-5 space-y-3 animate-pulse"
+                className="rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.06] dark:border-white/[0.08] p-5 space-y-3.5 shadow-xs"
               >
-                <div className="h-3 w-24 rounded-md bg-neutral-200 dark:bg-neutral-800" />
-                <div className="h-4 w-3/4 rounded-md bg-neutral-200 dark:bg-neutral-800" />
-                <div className="h-3 w-1/2 rounded-md bg-neutral-200 dark:bg-neutral-800" />
-                <div className="h-20 w-full rounded-lg bg-neutral-100 dark:bg-neutral-800/60" />
-                <div className="h-3 w-2/3 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-6 w-6 rounded-lg" />
+                </div>
+                <Skeleton className="h-5 w-4/5" />
+                <Skeleton className="h-3 w-1/2" />
+                <div className="pt-1">
+                  <Skeleton className="h-20 w-full rounded-lg" />
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.04]">
+                  <Skeleton className="h-7 w-20 rounded-lg" />
+                  <Skeleton className="h-7 w-20 rounded-lg" />
+                </div>
               </div>
             ))}
           </div>
@@ -636,38 +647,31 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
             return (
               <div
                 key={sch.id}
-                className="group rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.09] hover:border-brass/40 dark:hover:border-brass-lt/30 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
+                className="interactive-card group rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.09] hover:border-brass/40 dark:hover:border-brass-lt/30 shadow-xs flex flex-col justify-between overflow-hidden"
               >
                 <div className="p-5 space-y-3.5">
                   {/* Top Header: Host Country, Verification & Bookmark */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center gap-1">
-                        <MapPin size={11} className="text-neutral-400" />
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+                      <span className="font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-1">
+                        <MapPin size={11} className="text-brass dark:text-brass-lt" />
                         <span>{sch.destinationCountries.join(', ')}</span>
                       </span>
-
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 ${
-                          sch.verificationStatus === 'Officially Verified'
-                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                            : 'bg-brass/10 text-brass-strong dark:text-brass-lt'
-                        }`}
-                      >
-                        <ShieldCheck size={11} />
-                        <span>{sch.verificationStatus}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                        {sch.verificationStatus}
                       </span>
-
                       {sch.isDemonstration && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-black/[0.06] dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-400">
-                          Demo Record
-                        </span>
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span className="text-neutral-500">Demo</span>
+                        </>
                       )}
                     </div>
 
                     <button
                       onClick={() => onTrackScholarship(sch.id)}
-                      className={`p-1.5 rounded-lg transition cursor-pointer shrink-0 ${
+                      className={`p-1.5 rounded-lg transition-transform duration-150 active:scale-125 cursor-pointer shrink-0 ${
                         isTracked
                           ? 'bg-ink text-paper dark:bg-paper dark:text-ink shadow-xs'
                           : 'text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -713,18 +717,11 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                   </p>
 
                   {/* Degree Levels & Delivery */}
-                  <div className="flex flex-wrap items-center gap-1 pt-1">
-                    {sch.academicLevels.map((lvl) => (
-                      <span
-                        key={lvl}
-                        className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800/80 text-neutral-700 dark:text-neutral-300"
-                      >
-                        {lvl}
-                      </span>
-                    ))}
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-brass-tint dark:bg-brass-lt/10 text-brass-strong dark:text-brass-lt">
-                      {sch.format}
-                    </span>
+                  <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400 pt-0.5">
+                    <GraduationCap size={12} className="text-neutral-400" />
+                    <span>{sch.academicLevels.join(', ')}</span>
+                    <span aria-hidden="true">·</span>
+                    <span className="text-neutral-700 dark:text-neutral-300 font-medium">{sch.format}</span>
                   </div>
 
                   {/* Financial Coverage Snapshot Box */}
@@ -784,7 +781,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => onOpenReport(sch.id)}
-                      className="px-2.5 py-1.5 rounded-lg bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-ink hover:bg-ink-soft dark:bg-paper dark:text-ink dark:hover:bg-neutral-200 text-white text-xs font-semibold shadow-xs transition-all duration-150 active:scale-95 flex items-center gap-1 cursor-pointer"
                     >
                       <FileCheck2 size={12} />
                       <span>Audit Fit</span>
@@ -792,7 +789,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
 
                     <button
                       onClick={() => onOpenCalculator(sch.id)}
-                      className="px-2 py-1.5 rounded-lg bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-black/[0.07] dark:border-white/[0.09] text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                      className="px-2 py-1.5 rounded-lg bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-black/[0.07] dark:border-white/[0.09] text-xs font-medium transition-all duration-150 active:scale-95 flex items-center gap-1 cursor-pointer"
                     >
                       <Receipt size={12} />
                       <span>Calculator</span>
@@ -801,7 +798,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                     {onOpenAdvisor && (
                       <button
                         onClick={() => onOpenAdvisor(sch.id)}
-                        className="px-2 py-1.5 rounded-lg bg-brass-tint dark:bg-brass-lt/10 hover:bg-brass/10 dark:hover:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20 text-xs font-medium transition flex items-center gap-1 cursor-pointer"
+                        className="px-2 py-1.5 rounded-lg bg-brass-tint dark:bg-brass-lt/10 hover:bg-brass/10 dark:hover:bg-brass-lt/15 text-brass-strong dark:text-brass-lt border border-brass/20 dark:border-brass-lt/20 text-xs font-medium transition-all duration-150 active:scale-95 flex items-center gap-1 cursor-pointer"
                         title="Consult AI Scholarship Advisor"
                       >
                         <Sparkles size={12} />
@@ -813,7 +810,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setDetailModalScholarship(sch)}
-                      className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition cursor-pointer text-xs font-medium"
+                      className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all duration-150 active:scale-95 cursor-pointer text-xs font-medium"
                       title="Inspect full official terms"
                     >
                       Details
@@ -881,9 +878,16 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       )}
 
       {/* DETAILED SCHOLARSHIP INSPECTION MODAL */}
-      {detailModalScholarship && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl border border-black/[0.08] dark:border-white/[0.10] shadow-2xl overflow-y-auto p-6 sm:p-8 space-y-6">
+      <AnimatePresence>
+        {detailModalScholarship && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl border border-black/[0.08] dark:border-white/[0.10] shadow-2xl overflow-y-auto p-6 sm:p-8 space-y-6"
+            >
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.06] pb-4">
               <div className="min-w-0">
@@ -1050,9 +1054,10 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                 </a>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
-    </div>
-  );
+    </AnimatePresence>
+  </div>
+);
 };

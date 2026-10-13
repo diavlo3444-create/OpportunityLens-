@@ -209,7 +209,7 @@ export const Stat: React.FC<{
 }> = ({ label, value, sub, icon: Icon }) => (
   <div className="flex items-start gap-3">
     {Icon && (
-      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brass-tint dark:bg-brass-lt/10 text-brass dark:text-brass-lt">
+      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brass-tint dark:bg-brass-lt/10 text-brass dark:text-brass-lt transition-transform group-hover:scale-105 duration-200">
         <Icon size={15} />
       </div>
     )}
@@ -226,3 +226,81 @@ export const Stat: React.FC<{
     </div>
   </div>
 );
+
+/* ------------------------------------------------------------------ */
+/* Skeleton — elegant shimmer placeholder for loading states.        */
+/* ------------------------------------------------------------------ */
+export const Skeleton: React.FC<{
+  className?: string;
+}> = ({ className = 'h-4 w-full' }) => (
+  <div
+    className={`overflow-hidden rounded-md bg-black/[0.05] dark:bg-white/[0.07] animate-shimmer ${className}`}
+    aria-hidden="true"
+  />
+);
+
+/* ------------------------------------------------------------------ */
+/* AnimatedCounter — single-render ease-out counter for stats.       */
+/* Respects prefers-reduced-motion and never replays on re-render.    */
+/* ------------------------------------------------------------------ */
+export const AnimatedCounter: React.FC<{
+  value: number;
+  duration?: number;
+  formatter?: (val: number) => string;
+  className?: string;
+}> = ({ value, duration = 600, formatter, className = '' }) => {
+  const [displayValue, setDisplayValue] = React.useState<number>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return value;
+    }
+    return 0;
+  });
+  const prevTargetRef = React.useRef(value);
+  const mountedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplayValue(value);
+      return;
+    }
+
+    const startValue = mountedRef.current ? prevTargetRef.current : 0;
+    prevTargetRef.current = value;
+    mountedRef.current = true;
+
+    if (startValue === value) {
+      setDisplayValue(value);
+      return;
+    }
+
+    let startTime: number | null = null;
+    let animationFrameId: number;
+
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeOutCubic(progress);
+      const current = Math.round(startValue + (value - startValue) * eased);
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [value, duration]);
+
+  return (
+    <span className={`tabular-nums ${className}`}>
+      {formatter ? formatter(displayValue) : displayValue}
+    </span>
+  );
+};

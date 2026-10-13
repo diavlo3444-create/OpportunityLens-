@@ -73,15 +73,29 @@ export function evaluateStudentEligibility(
   // 2. Nationality & Country of Residence Check
   // ----------------------------------------------------
   const allowedNats = scholarship.eligibleNationalities || [];
-  const isGlobalNat = allowedNats.some(
-    (n) =>
-      n.toLowerCase().includes('all') ||
-      n.toLowerCase().includes('global') ||
-      n.toLowerCase().includes('worldwide') ||
-      n.toLowerCase().includes('any country')
+  const requiresNonUk = allowedNats.some(
+    (n) => n.toLowerCase().includes('outside the united kingdom') || n.toLowerCase().includes('non-uk')
   );
+  const requiresNonCanadian = allowedNats.some((n) => n.toLowerCase().includes('non-canadian'));
 
   const studentNats = student.nationalities || [];
+  const isStudentUk = studentNats.some(
+    (n) => n.toLowerCase().includes('uk') || n.toLowerCase().includes('united kingdom') || n.toLowerCase().includes('british')
+  );
+  const isStudentCanadian = studentNats.some(
+    (n) => n.toLowerCase().includes('canada') || n.toLowerCase().includes('canadian')
+  );
+
+  const isGlobalNat =
+    !requiresNonUk &&
+    !requiresNonCanadian &&
+    allowedNats.some(
+      (n) =>
+        n.toLowerCase().includes('all nationalities') ||
+        n.toLowerCase().includes('global constituencies') ||
+        n.toLowerCase().includes('worldwide') ||
+        (n.toLowerCase().includes('any country') && !n.toLowerCase().includes('outside'))
+    );
 
   if (studentNats.length === 0) {
     unknownsCount++;
@@ -101,7 +115,35 @@ export function evaluateStudentEligibility(
       officialSourceUrl: scholarship.officialUrl,
       missingInfoNote: 'Add your passport/citizenship country to resolve this check.',
     });
-  } else if (isGlobalNat) {
+  } else if (requiresNonUk && isStudentUk) {
+    hardFailsCount++;
+    nationalityScore = 0;
+    audits.push({
+      requirementId: `${scholarship.id}-audit-nat`,
+      category: 'Citizenship',
+      label: 'Nationality Restriction (Non-UK Only)',
+      status: 'failed',
+      studentValue: studentNats.join(', '),
+      requiredValue: 'Citizens of any country outside the United Kingdom',
+      reasoning: 'Documented rule: Gates Cambridge explicitly excludes UK citizens from this international trust.',
+      officialQuote: 'You must be a citizen of any country outside the United Kingdom.',
+      officialSourceUrl: scholarship.officialUrl,
+    });
+  } else if (requiresNonCanadian && isStudentCanadian) {
+    hardFailsCount++;
+    nationalityScore = 0;
+    audits.push({
+      requirementId: `${scholarship.id}-audit-nat`,
+      category: 'Citizenship',
+      label: 'Nationality Restriction (International Student Only)',
+      status: 'failed',
+      studentValue: studentNats.join(', '),
+      requiredValue: 'Non-Canadian requiring study permit',
+      reasoning: 'Documented rule: Lester B. Pearson is reserved strictly for international students paying foreign fees.',
+      officialQuote: 'Canadian citizens and permanent residents are not eligible.',
+      officialSourceUrl: scholarship.officialUrl,
+    });
+  } else if (isGlobalNat || (requiresNonUk && !isStudentUk) || (requiresNonCanadian && !isStudentCanadian)) {
     nationalityScore = 25;
     passesCount++;
     audits.push({
@@ -110,49 +152,18 @@ export function evaluateStudentEligibility(
       label: 'Nationality Eligibility Scope',
       status: 'passed',
       studentValue: studentNats.join(', '),
-      requiredValue: 'Open Worldwide (All Nationalities)',
-      reasoning: 'This award is open to applicants from all countries without diplomatic restrictions.',
+      requiredValue: allowedNats.join('; '),
+      reasoning: requiresNonUk
+        ? `Eligible: As a citizen of ${studentNats.join(', ')} (outside the United Kingdom), you qualify for this international award.`
+        : requiresNonCanadian
+        ? `Eligible: As an international non-Canadian citizen (${studentNats.join(', ')}), you meet the foreign study permit eligibility.`
+        : 'This award is open to applicants from all countries without diplomatic restrictions.',
       officialQuote:
         scholarship.requirementsList.find((r) => r.category === 'nationality')?.officialSourceQuote ||
-        'Open to outstanding candidates worldwide regardless of nationality.',
+        allowedNats.join('; '),
       officialSourceUrl: scholarship.officialUrl,
     });
   } else {
-    // Specific restriction (e.g. Non-UK for Gates Cambridge, Non-Canadian for Pearson, Partner countries for Chevening/Fulbright)
-    const requiresNonUk = allowedNats.some((n) => n.toLowerCase().includes('outside the united kingdom') || n.toLowerCase().includes('non-uk'));
-    const requiresNonCanadian = allowedNats.some((n) => n.toLowerCase().includes('non-canadian'));
-    const isStudentUk = studentNats.some((n) => n.toLowerCase().includes('uk') || n.toLowerCase().includes('united kingdom') || n.toLowerCase().includes('british'));
-    const isStudentCanadian = studentNats.some((n) => n.toLowerCase().includes('canada') || n.toLowerCase().includes('canadian'));
-
-    if (requiresNonUk && isStudentUk) {
-      hardFailsCount++;
-      nationalityScore = 0;
-      audits.push({
-        requirementId: `${scholarship.id}-audit-nat`,
-        category: 'Citizenship',
-        label: 'Nationality Restriction (Non-UK)',
-        status: 'failed',
-        studentValue: studentNats.join(', '),
-        requiredValue: 'Citizens of any country outside the United Kingdom',
-        reasoning: 'Documented rule: Gates Cambridge explicitly excludes UK citizens from this specific international trust.',
-        officialQuote: 'You must be a citizen of any country outside the United Kingdom.',
-        officialSourceUrl: scholarship.officialUrl,
-      });
-    } else if (requiresNonCanadian && isStudentCanadian) {
-      hardFailsCount++;
-      nationalityScore = 0;
-      audits.push({
-        requirementId: `${scholarship.id}-audit-nat`,
-        category: 'Citizenship',
-        label: 'Nationality Restriction (International Student Only)',
-        status: 'failed',
-        studentValue: studentNats.join(', '),
-        requiredValue: 'Non-Canadian requiring study permit',
-        reasoning: 'Documented rule: Lester B. Pearson is reserved strictly for international students paying foreign fees.',
-        officialQuote: 'Canadian citizens and permanent residents are not eligible.',
-        officialSourceUrl: scholarship.officialUrl,
-      });
-    } else {
       nationalityScore = 22;
       passesCount++;
       audits.push({
@@ -168,7 +179,6 @@ export function evaluateStudentEligibility(
           `Eligible partners: ${allowedNats.slice(0, 2).join('; ')}`,
         officialSourceUrl: scholarship.officialUrl,
       });
-    }
   }
 
   // ----------------------------------------------------
@@ -371,27 +381,43 @@ export function evaluateStudentEligibility(
     scoreBreakdown.academicThresholdFit +
     scoreBreakdown.fundingAlignmentFit;
 
-  // Determine overall status based on strict rules
+  // Compile explicit lists of unmet mandatory requirements & items needing confirmation
+  const unmetRequirements: string[] = audits
+    .filter((a) => a.status === 'failed')
+    .map((a) => a.reasoning || `${a.category}: ${a.label} requirement not met`);
+
+  const verificationNeededItems: string[] = audits
+    .filter((a) => a.status === 'unknown' || a.status === 'warning')
+    .map((a) => a.missingInfoNote || a.reasoning || `${a.category}: Verification required`);
+
+  // Compute 3-tier status according to strict specification:
+  // 1. 'eligible' - all known mandatory criteria are met
+  // 2. 'needs_verification' - an important requirement is unknown or ambiguous, with no confirmed disqualifying requirement
+  // 3. 'ineligible' - at least one explicit mandatory requirement is not met
+  let computedTier: 'eligible' | 'needs_verification' | 'ineligible';
   let status: EligibilityStatus;
   let headline: string;
   let summaryReasoning: string;
 
   if (hardFailsCount > 0) {
+    computedTier = 'ineligible';
     status = 'ineligible';
-    headline = 'Ineligible Based on Documented Requirement';
-    summaryReasoning = `You are excluded by ${hardFailsCount} documented requirement(s) (e.g. academic study level, citizenship, or strict age cutoff).`;
-  } else if (unknownsCount >= 2 || missingProfileFields.length >= 2) {
-    status = 'insufficient_info';
-    headline = 'Insufficient Information in Profile';
-    summaryReasoning = `Your profile lacks essential details (${missingProfileFields.join(', ')}). Complete your profile to verify your match.`;
-  } else if (warningsCount > 0 || unknownsCount > 0) {
-    status = 'potentially_eligible';
-    headline = 'Potentially Eligible — Verify Details';
-    summaryReasoning = `You satisfy core primary criteria. There are ${warningsCount + unknownsCount} item(s) requiring human verification (e.g. university nomination, specific subject alignment, or English certification).`;
+    headline = 'Not eligible based on documented requirements';
+    summaryReasoning = unmetRequirements.length > 0
+      ? unmetRequirements.join(' ')
+      : `You do not meet ${hardFailsCount} mandatory requirement(s) (such as academic degree level, citizenship exclusions, or minimum age cutoff).`;
+  } else if (unknownsCount > 0 || warningsCount > 0 || missingProfileFields.length > 0) {
+    computedTier = 'needs_verification';
+    status = unknownsCount >= 2 || missingProfileFields.length >= 2 ? 'insufficient_info' : 'potentially_eligible';
+    headline = 'Eligibility to confirm — additional verification needed';
+    summaryReasoning = verificationNeededItems.length > 0
+      ? `Core qualifications match, but ${verificationNeededItems.length} item(s) require verification: ${verificationNeededItems.slice(0, 2).join('; ')}.`
+      : 'Core academic standing aligns, but specific institutional or document prerequisites require verification on the official portal.';
   } else {
+    computedTier = 'eligible';
     status = 'likely_eligible';
-    headline = 'Likely Eligible Based on Stored Rules';
-    summaryReasoning = `All documented prerequisites (academic degree level, nationality, subject scope, and GPA benchmarks) match your reported profile.`;
+    headline = 'Eligible — all known mandatory criteria met';
+    summaryReasoning = `All documented mandatory criteria (degree level ${studentLevel}, citizenship ${studentNats.join(', ') || 'worldwide'}, and academic metrics) match your reported record.`;
   }
 
   const scoreExplanation = `Criteria Match Breakdown: Study Level Fit (${scoreBreakdown.academicLevelFit}/25), Citizenship Fit (${scoreBreakdown.nationalityResidenceFit}/25), Subject Fit (${scoreBreakdown.subjectDisciplineFit}/20), Academic Metrics (${scoreBreakdown.academicThresholdFit}/20), Funding Alignment (${scoreBreakdown.fundingAlignmentFit}/10).`;
@@ -406,6 +432,7 @@ export function evaluateStudentEligibility(
     opportunityId: scholarship.id,
     opportunityTitle: scholarship.title,
     status,
+    computedTier,
     overallScore: Math.min(100, Math.max(0, totalScore)),
     scoreBreakdown,
     scoreExplanation,
@@ -413,6 +440,8 @@ export function evaluateStudentEligibility(
     summaryReasoning,
     audits,
     missingProfileFields,
+    unmetRequirements,
+    verificationNeededItems,
     disclaimers,
     lastEvaluatedAt: new Date().toISOString(),
   };

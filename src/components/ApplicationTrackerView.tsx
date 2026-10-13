@@ -205,7 +205,8 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
 
                       return (
                         <div
-                          key={item.id}                              className="p-4 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3 hover:border-brass/40 dark:hover:border-brass-lt/30 transition"
+                          key={item.id}
+                          className="interactive-card p-4 rounded-xl bg-white dark:bg-neutral-900 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3 hover:border-brass/40 dark:hover:border-brass-lt/30"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
@@ -222,7 +223,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
 
                             <button
                               onClick={() => onRemoveTrackerItem(item.id)}
-                              className="text-neutral-400 hover:text-rose-500 transition p-1"
+                              className="text-neutral-400 hover:text-rose-500 transition-colors p-1 active:scale-90"
                               title="Remove application"
                             >
                               <Trash2 size={13} />
@@ -245,7 +246,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
                             </div>
                             <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-brass dark:bg-brass-lt rounded-full"
+                                className="h-full bg-brass dark:bg-brass-lt rounded-full transition-all duration-300 ease-out"
                                 style={{ width: `${progressPct}%` }}
                               />
                             </div>

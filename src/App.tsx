@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Navigation, ActiveTab } from './components/Navigation';
 import { LandingView } from './components/LandingView';
 import { DiscoveryView } from './components/DiscoveryView';
@@ -24,6 +25,7 @@ import {
 import {
   getStoredStudentProfile,
   saveStoredStudentProfile,
+  hasUserCompletedOnboarding,
   getStoredTrackerItems,
   saveStoredTrackerItems,
   getAllScholarships,
@@ -45,7 +47,7 @@ export default function App() {
     const list = getAllScholarships();
     return list[0]?.id || '';
   });
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => !hasUserCompletedOnboarding());
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return (
       localStorage.getItem('opportunitylens_theme') === 'dark' ||
@@ -68,6 +70,7 @@ export default function App() {
   const handleSaveProfile = (updated: StudentProfile) => {
     setStudentProfile(updated);
     saveStoredStudentProfile(updated);
+    setActiveTab('overview');
   };
 
   // Import batch records
@@ -188,95 +191,107 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0 flex flex-col justify-between overflow-y-auto min-h-screen">
-        <div className="flex-1 pb-16">
-          {activeTab === 'overview' && (
-            <LandingView
-              scholarships={scholarships}
-              onStartMatching={() => setIsOnboardingOpen(true)}
-              onExploreOpportunities={() => setActiveTab('discover')}
-              onViewReport={handleOpenReport}
-              onOpenAdvisor={handleOpenAdvisor}
-              studentProfile={studentProfile}
-            />
-          )}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 pb-16"
+          >
+            {activeTab === 'overview' && (
+              <LandingView
+                scholarships={scholarships}
+                onStartMatching={() => setIsOnboardingOpen(true)}
+                onExploreOpportunities={() => setActiveTab('discover')}
+                onViewReport={handleOpenReport}
+                onOpenAdvisor={handleOpenAdvisor}
+                onOpenCalculator={handleOpenCalculator}
+                onTrackScholarship={handleTrackScholarship}
+                isScholarshipTracked={isScholarshipTracked}
+                studentProfile={studentProfile}
+              />
+            )}
 
-          {activeTab === 'discover' && (
-            <DiscoveryView
-              scholarships={scholarships}
-              studentProfile={studentProfile}
-              onSelectScholarship={handleSelectScholarship}
-              onOpenReport={handleOpenReport}
-              onOpenCalculator={handleOpenCalculator}
-              onOpenAdvisor={handleOpenAdvisor}
-              onTrackScholarship={handleTrackScholarship}
-              isScholarshipTracked={isScholarshipTracked}
-            />
-          )}
+            {activeTab === 'discover' && (
+              <DiscoveryView
+                scholarships={scholarships}
+                studentProfile={studentProfile}
+                onSelectScholarship={handleSelectScholarship}
+                onOpenReport={handleOpenReport}
+                onOpenCalculator={handleOpenCalculator}
+                onOpenAdvisor={handleOpenAdvisor}
+                onTrackScholarship={handleTrackScholarship}
+                isScholarshipTracked={isScholarshipTracked}
+              />
+            )}
 
-          {activeTab === 'eligibility' && (
-            <EligibilityEngineView
-              scholarships={scholarships}
-              studentProfile={studentProfile}
-              selectedScholarshipId={selectedScholarshipId}
-              onSelectScholarshipId={setSelectedScholarshipId}
-              onOpenProfile={() => setActiveTab('profile')}
-              onOpenAdvisor={handleOpenAdvisor}
-              onTrackScholarship={handleTrackScholarship}
-              isScholarshipTracked={isScholarshipTracked}
-            />
-          )}
+            {activeTab === 'eligibility' && (
+              <EligibilityEngineView
+                scholarships={scholarships}
+                studentProfile={studentProfile}
+                selectedScholarshipId={selectedScholarshipId}
+                onSelectScholarshipId={setSelectedScholarshipId}
+                onOpenProfile={() => setActiveTab('profile')}
+                onOpenAdvisor={handleOpenAdvisor}
+                onTrackScholarship={handleTrackScholarship}
+                isScholarshipTracked={isScholarshipTracked}
+              />
+            )}
 
-          {activeTab === 'advisor' && (
-            <ScholarshipAdvisorView
-              scholarships={scholarships}
-              studentProfile={studentProfile}
-              selectedScholarshipId={selectedScholarshipId}
-              onSelectScholarshipId={setSelectedScholarshipId}
-              onTrackScholarship={handleTrackScholarship}
-              isScholarshipTracked={isScholarshipTracked}
-              onOpenProfile={() => setActiveTab('profile')}
-            />
-          )}
+            {activeTab === 'advisor' && (
+              <ScholarshipAdvisorView
+                scholarships={scholarships}
+                studentProfile={studentProfile}
+                selectedScholarshipId={selectedScholarshipId}
+                onSelectScholarshipId={setSelectedScholarshipId}
+                onTrackScholarship={handleTrackScholarship}
+                isScholarshipTracked={isScholarshipTracked}
+                onOpenProfile={() => setActiveTab('profile')}
+              />
+            )}
 
-          {activeTab === 'funding' && (
-            <FundingCalculatorView
-              opportunities={scholarships}
-              studentProfile={studentProfile}
-              selectedOpportunityId={selectedScholarshipId}
-              onSelectOpportunityId={setSelectedScholarshipId}
-            />
-          )}
+            {activeTab === 'funding' && (
+              <FundingCalculatorView
+                opportunities={scholarships}
+                studentProfile={studentProfile}
+                selectedOpportunityId={selectedScholarshipId}
+                onSelectOpportunityId={setSelectedScholarshipId}
+              />
+            )}
 
-          {activeTab === 'tracker' && (
-            <ApplicationTrackerView
-              trackerItems={trackerItems}
-              opportunities={scholarships}
-              onUpdateTrackerItem={handleUpdateTrackerItem}
-              onRemoveTrackerItem={handleRemoveTrackerItem}
-              onOpenReport={handleOpenReport}
-            />
-          )}
+            {activeTab === 'tracker' && (
+              <ApplicationTrackerView
+                trackerItems={trackerItems}
+                opportunities={scholarships}
+                onUpdateTrackerItem={handleUpdateTrackerItem}
+                onRemoveTrackerItem={handleRemoveTrackerItem}
+                onOpenReport={handleOpenReport}
+              />
+            )}
 
-          {activeTab === 'ingestion' && (
-            <DataIngestionView
-              scholarships={scholarships}
-              sources={sources}
-              ingestionLogs={ingestionLogs}
-              onImportRecords={handleImportRecords}
-              onAddSource={handleAddSource}
-            />
-          )}
+            {activeTab === 'ingestion' && (
+              <DataIngestionView
+                scholarships={scholarships}
+                sources={sources}
+                ingestionLogs={ingestionLogs}
+                onImportRecords={handleImportRecords}
+                onAddSource={handleAddSource}
+              />
+            )}
 
-          {activeTab === 'profile' && (
-            <ProfileView
-              profile={studentProfile}
-              onSaveProfile={handleSaveProfile}
-              isDarkMode={isDarkMode}
-              toggleDarkMode={toggleDarkMode}
-              onOpenOnboarding={() => setIsOnboardingOpen(true)}
-            />
-          )}
-        </div>
+            {activeTab === 'profile' && (
+              <ProfileView
+                profile={studentProfile}
+                onSaveProfile={handleSaveProfile}
+                isDarkMode={isDarkMode}
+                toggleDarkMode={toggleDarkMode}
+                onOpenOnboarding={() => setIsOnboardingOpen(true)}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
 
         {/* Apple-styled Footer */}
         <footer className="border-t border-black/[0.06] dark:border-white/[0.06] py-6 px-6 sm:px-12 text-xs text-neutral-500 dark:text-neutral-400 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/40 dark:bg-neutral-950/40 backdrop-blur-xs">
